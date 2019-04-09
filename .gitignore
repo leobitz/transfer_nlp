@@ -1,0 +1,11 @@
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+__pycache__/*
+log/
+logs/
+results/
+helper_scripts/
+model_weights/
+*.db
+*.sqlite
+data/*.txt

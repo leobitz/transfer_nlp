@@ -1,0 +1,76 @@
+{
+    "word_class": [
+        "iv",
+        "tv"
+    ],
+    "possession": [
+        "p1",
+        "p2",
+        "p3"
+    ],
+    "number": [
+        "sing",
+        "plr"
+    ],
+    "gender": [
+        "masc",
+        "fem"
+    ],
+    "aspect": [
+        "prf",
+        "imfr"
+    ],
+    "converb": [
+        "shortcnvb",
+        "longcnvb"
+    ],
+    "noun_cases": [
+        "abs",
+        "nom",
+        "obl",
+        "voc"
+    ],
+    "subjectivity": [
+        "nsub",
+        "sub"
+    ],
+    "opt": [
+        "opt"
+    ],
+    "rel": [
+        "rel"
+    ],
+    "fut": [
+        "fut"
+    ],
+    "nmlz": [
+        "nmlz"
+    ],
+    "inter": [
+        "inter"
+    ],
+    "neg": [
+        "neg"
+    ],
+    "intr": [
+        "intr"
+    ],
+    "inf": [
+        "inf"
+    ],
+    "simu": [
+        "simu"
+    ],
+    "cau": [
+        "cau"
+    ],
+    "intrEnding": [
+        "intrEnding"
+    ],
+    "pass": [
+        "pass"
+    ],
+    "impf": [
+        "impf"
+    ]
+}
