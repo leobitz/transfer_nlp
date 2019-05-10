@@ -3,7 +3,7 @@ from text_processor import *
 
 class DataGen:
 
-    def __init__(self, reverse=False, data):
+    def __init__(self, reverse=False, data=None):
         if reverse:
             self.roots, self.words, self.featArray, mr, mw, n_features = get_reverse_feature_array(data)
             self.n_features = n_features

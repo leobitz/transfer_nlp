@@ -10,6 +10,7 @@ from keras.optimizers import Adam
 from keras.optimizers import RMSprop
 from keras.utils.vis_utils import plot_model
 import keras
+import numpy as np
 
 
 def conv_model(n_input, n_output, n_feature, n_enc_units, n_dec_units, feat_units = 5):
