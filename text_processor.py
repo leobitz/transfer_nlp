@@ -1,7 +1,7 @@
 import numpy as np
 import json
 
-feat2val = json.loads(open('data/features.json').read())
+feat2val = json.loads(open('features.json').read())
 val2feat = {}
 feat2int = {}
 int2feat = {}
