@@ -13,32 +13,32 @@ import keras
 import numpy as np
 
 
-def conv_model(n_input, n_output, n_feature, n_units, feat_units = 5):
-    root_word_input = Input(shape=(15, 28, 1), name="root_word_input")
+def conv_model(root_h, root_w, decoder_input, decoder_output, n_feature, hidden_size, feat_units = 5):
+    root_word_input = Input(shape=(root_h, root_w, 1), name="root_word_input")
     feature_input = Input(shape=(n_feature,), name="word_feature_input")
     feat_out = Dense(feat_units, activation="relu", name="feature_output")(feature_input)
     
     x = Conv2D(20, (5, 5), padding='same', activation='relu')(root_word_input)
     x = MaxPooling2D(3, 3)(x)
 
-    flat_output = Flatten()(x)
-#     x = Concatenate()([x, feat_out])
-#     state_h = Dense(n_dec_units, activation='relu')(x)
-    x = Dense(n_units - feat_units, activation='relu')(flat_output)
+    x = Flatten()(x)
+    # x = Concatenate()([x, feat_out])
+    # state_h = Dense(hidden_size, activation='relu')(x)
+    x = Dense(hidden_size - feat_units, activation='relu')(x)
     
     state_h = Concatenate()([x, feat_out])
     
-    decoder_inputs = Input(shape=(None, n_output), name="target_word_input")
-    decoder_gru = GRU(n_units, return_sequences=True, return_state=True, name="decoder_gru")
+    decoder_inputs = Input(shape=(None, decoder_input), name="target_word_input")
+    decoder_gru = GRU(hidden_size, return_sequences=True, return_state=True, name="decoder_gru")
     decoder_outputs, _= decoder_gru(decoder_inputs, initial_state=state_h)
     
-    decoder_dense = Dense(n_output, activation='softmax', name="train_output")
+    decoder_dense = Dense(decoder_input, activation='softmax', name="train_output")
     decoder_outputs = decoder_dense(decoder_outputs)
     
-    model = Model([root_word_input, decoder_inputs, feature_input], decoder_outputs)
+    model = Model([root_word_input, feature_input, decoder_inputs], decoder_outputs)
     encoder_model = Model([root_word_input, feature_input], state_h)
     
-    decoder_state_input_h = Input(shape=(n_units,))
+    decoder_state_input_h = Input(shape=(hidden_size,))
     decoder_outputs, state_h= decoder_gru(decoder_inputs, initial_state=decoder_state_input_h)
 
     decoder_outputs = decoder_dense(decoder_outputs)
