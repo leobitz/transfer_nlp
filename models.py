@@ -18,15 +18,15 @@ def conv_model(n_input, n_output, n_feature, n_units, feat_units = 5):
     feature_input = Input(shape=(n_feature,), name="word_feature_input")
     feat_out = Dense(feat_units, activation="relu", name="feature_output")(feature_input)
     
-    x = Conv2D(20, (5, 5), padding='same', activation='relu')(root_word_input)
-    x = MaxPooling2D(3, 3)(x)
+    x = Conv2D(20, (5, 5), padding='same', activation='relu', name="cnn")(root_word_input)
+    x = MaxPooling2D(3, 3, name="pooling")(x)
 
-    flat_output = Flatten()(x)
+    flat_output = Flatten(name="flatten")(x)
 #     x = Concatenate()([x, feat_out])
 #     state_h = Dense(n_dec_units, activation='relu')(x)
-    x = Dense(n_units - feat_units, activation='relu')(flat_output)
+    x = Dense(n_units - feat_units, activation='relu', name="cnn_encoder")(flat_output)
     
-    state_h = Concatenate()([x, feat_out])
+    state_h = Concatenate(name="concatnate")([x, feat_out])
     
     decoder_inputs = Input(shape=(None, n_output), name="target_word_input")
     decoder_gru = GRU(n_units, return_sequences=True, return_state=True, name="decoder_gru")
