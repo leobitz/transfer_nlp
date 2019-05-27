@@ -13,10 +13,39 @@ class DataGen:
         else:
             self.roots, self.words, self.featArray, mr, mw = get_feature_array(data)
             self.word_feat_len = len(self.featArray[0])
+        vocab = list(set(self.roots))
+        self.root2int = {key : val for val, key in enumerate(vocab)}
+        self.int2word = {self.root2int[key]: key for key  in list(self.root2int.keys())}
         self.n_chars = len(char2int)
         self.max_root_len = mr
         self.max_output_len = mw + 2
+
+    def onehot_gen_data(self, batch_size=100, n_batches=-1, trainset=True):
+        max_batch, min_batch = 0, 0
+        if trainset == True:
+            max_batch = int(len(self.words) * .7) / batch_size
+            min_batch = 0
+        else:
+            max_batch = len(self.words)/ batch_size
+            min_batch = int(len(self.words) * .7 / batch_size)
         
+        total_batchs = max_batch
+        batch = min_batch
+        while True:
+            rootX, target_inX, featX, y = list(), list(), list(), list()
+            for i in range(batch * batch_size, (1 + batch) * batch_size):
+                root = self.roots[i]
+                word = self.words[i]
+                word_feature = self.featArray[i]
+                root_encoded, target_encoded, target_in_encoded = self.encond_input_output(root, word)
+                rootX.append(self.root2int[root])
+                target_inX.append(target_in_encoded)
+                featX.append(word_feature)
+                y.append(target_encoded)
+            yield [np.array(rootX), np.array(target_inX), np.array(featX)], np.array(y)
+            batch += 1
+            if batch == total_batchs or batch == n_batches:
+                batch = min_batch  
 
     def cnn_gen_data(self, batch_size=100, n_batches=-1, trainset=True):
         max_batch, min_batch = 0, 0

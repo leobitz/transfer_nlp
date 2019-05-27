@@ -3,7 +3,7 @@ from keras.layers import Dense
 from keras.layers import Dropout
 from keras.layers import LSTM, TimeDistributed
 from keras.layers import Concatenate, Flatten
-from keras.layers import GRU, Conv2D, MaxPooling2D
+from keras.layers import GRU, Conv2D, MaxPooling2D, Embedding
 from keras.layers import Input, Reshape
 from keras.models import Model
 from keras.optimizers import Adam
@@ -26,6 +26,36 @@ def conv_model(n_input, n_output, n_feature, n_units, feat_units = 5):
 #     state_h = Dense(n_dec_units, activation='relu')(x)
     x = Dense(n_units - feat_units, activation='relu', name="cnn_encoder")(flat_output)
     
+    state_h = Concatenate(name="concatnate")([x, feat_out])
+    
+    decoder_inputs = Input(shape=(None, n_output), name="target_word_input")
+    decoder_gru = GRU(n_units, return_sequences=True, return_state=True, name="decoder_gru")
+    decoder_outputs, _= decoder_gru(decoder_inputs, initial_state=state_h)
+    
+    decoder_dense = Dense(n_output, activation='softmax', name="train_output")
+    decoder_outputs = decoder_dense(decoder_outputs)
+    
+    model = Model([root_word_input, decoder_inputs, feature_input], decoder_outputs)
+    encoder_model = Model([root_word_input, feature_input], state_h)
+    
+    decoder_state_input_h = Input(shape=(n_units,))
+    decoder_outputs, state_h= decoder_gru(decoder_inputs, initial_state=decoder_state_input_h)
+
+    decoder_outputs = decoder_dense(decoder_outputs)
+    decoder_model = Model([decoder_inputs, decoder_state_input_h], [decoder_outputs, state_h])
+
+    return model, encoder_model, decoder_model
+
+def onehot_model(n_words, n_output, n_feature, n_units, feat_units = 5):
+    root_word_input = Input(shape=(1,), name="root_word_input")
+    feature_input = Input(shape=(n_feature,), name="word_feature_input")
+
+    x = Embedding(n_words, (n_units - feat_units))(root_word_input)
+
+    feat_out = Dense(feat_units, activation="relu", name="feature_output")(feature_input)
+    
+    # x = Dense(n_units - feat_units, activation='relu', name="cnn_encoder")(flat_output)
+    x = Flatten()(x)
     state_h = Concatenate(name="concatnate")([x, feat_out])
     
     decoder_inputs = Input(shape=(None, n_output), name="target_word_input")
