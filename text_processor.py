@@ -57,11 +57,14 @@ def get_feature_array(data):
     maxroot, maxword = 15, 0
     words = []
     roots = []
+    word_index = []
     k = 0
     for line in lines:
         splited = line[:-1].split(' ')
         word = splited[0]
         root = splited[1]
+        if len(splited) == 4:
+            word_index.append(int(splited[3]))
         wordFeats = [s[:-1] for s in splited[2].split('<')[2:]]
         words.append(word)
         roots.append(root)
@@ -85,4 +88,6 @@ def get_feature_array(data):
     for i, c in enumerate(sorted(char2int.keys())):
         char2int[c] = i
         int2char[i] = c
+    if len(word_index) > 0:
+        return roots, words,  featArray, word_index, maxroot, maxword
     return roots, words, featArray, maxroot, maxword
