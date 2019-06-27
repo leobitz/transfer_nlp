@@ -23,10 +23,13 @@ for featCat in feat2val:
         val2int[val] = i
         i += 1
 i = 0
+
+
 def get_feat_val(val):
     featCat = val2feat[val]
     i = feat2val[featCat] .index(val)
     return i, featCat
+
 
 rev_val2feat = {}
 j = 0
@@ -37,13 +40,14 @@ for feat in feat2val.keys():
         val = val_list[i]
         rev_val2feat[val] = [max_len, i]
 
+
 def get_feature_array(data):
     """
     Creates a mapping from the words to thier features
-    
+
     Params:
         data - raw text from the data file
-    
+
     Returns:
         roots = root words list
         words = target words that are to be generated
@@ -61,10 +65,12 @@ def get_feature_array(data):
     k = 0
     for line in lines:
         splited = line[:-1].split(' ')
+#         if splited[3] == '1':
+#             continue
         word = splited[0]
         root = splited[1]
         if len(splited) == 4:
-            word_index.append(int(splited[3]))
+            word_index.append([int(vs) for vs in splited[3]])
         wordFeats = [s[:-1] for s in splited[2].split('<')[2:]]
         words.append(word)
         roots.append(root)
@@ -80,11 +86,11 @@ def get_feature_array(data):
                 temp = len(char2int)
                 char2int[char] = temp
                 int2char[temp] = char
-    # start code  
-    int2char[len(char2int)] = '&'   
-    char2int['&'] = len(char2int)  
-    int2char[len(char2int)] = ' '   
-    char2int[' '] = len(char2int)  
+    # start code
+    int2char[len(char2int)] = '&'
+    char2int['&'] = len(char2int)
+    int2char[len(char2int)] = ' '
+    char2int[' '] = len(char2int)
     for i, c in enumerate(sorted(char2int.keys())):
         char2int[c] = i
         int2char[i] = c

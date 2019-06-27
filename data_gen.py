@@ -97,8 +97,8 @@ class DataGen:
                 root = self.roots[i]
                 word = self.words[i]
                 
-                word_index = [0, 0]
-                word_index[self.word_indexes[i]] = 1
+                # word_index = [0, 0]
+                # word_index[self.word_indexes[i]] = 1
                 word_feature = self.featArray[i]
 
                 root_encoded, target_encoded, target_in_encoded = self.encond_input_output(root, word)
@@ -107,7 +107,7 @@ class DataGen:
                 target_inX.append(target_in_encoded)
                 featX.append(word_feature)
                 y.append(target_encoded)
-                word_indexes.append(word_index)
+                word_indexes.append(self.word_indexes[i])
 
             yield [np.array(rootX), np.array(target_inX), np.array(featX), np.array(word_indexes)], np.array(y)
             batch += 1

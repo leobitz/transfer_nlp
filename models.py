@@ -13,102 +13,125 @@ import tensorflow.keras
 import numpy as np
 
 
-def conv_model(n_input, n_output, n_feature, n_units, feat_units = 5):
+def conv_model(n_input, n_output, n_feature, n_units, feat_units=5):
     root_word_input = Input(shape=(15, 28, 1), name="root_word_input")
     feature_input = Input(shape=(n_feature,), name="word_feature_input")
-    feat_out = Dense(feat_units, activation="relu", name="feature_output")(feature_input)
-    
-    x = Conv2D(20, (5, 5), padding='same', activation='relu', name="cnn")(root_word_input)
+    feat_out = Dense(feat_units, activation="relu",
+                     name="feature_output")(feature_input)
+
+    x = Conv2D(20, (5, 5), padding='same', activation='relu',
+               name="cnn")(root_word_input)
     x = MaxPooling2D(3, 3, name="pooling")(x)
 
     flat_output = Flatten(name="flatten")(x)
 #     x = Concatenate()([x, feat_out])
 #     state_h = Dense(n_dec_units, activation='relu')(x)
-    x = Dense(n_units - feat_units, activation='relu', name="cnn_encoder")(flat_output)
-    
+    x = Dense(n_units - feat_units, activation='relu',
+              name="cnn_encoder")(flat_output)
+
     state_h = Concatenate(name="concatnate")([x, feat_out])
-    
+
     decoder_inputs = Input(shape=(None, n_output), name="target_word_input")
-    decoder_gru = GRU(n_units, return_sequences=True, return_state=True, name="decoder_gru")
-    decoder_outputs, _= decoder_gru(decoder_inputs, initial_state=state_h)
-    
+    decoder_gru = GRU(n_units, return_sequences=True,
+                      return_state=True, name="decoder_gru")
+    decoder_outputs, _ = decoder_gru(decoder_inputs, initial_state=state_h)
+
     decoder_dense = Dense(n_output, activation='softmax', name="train_output")
     decoder_outputs = decoder_dense(decoder_outputs)
-    
-    model = Model([root_word_input, decoder_inputs, feature_input], decoder_outputs)
+
+    model = Model([root_word_input, decoder_inputs,
+                   feature_input], decoder_outputs)
     encoder_model = Model([root_word_input, feature_input], state_h)
-    
+
     decoder_state_input_h = Input(shape=(n_units,))
-    decoder_outputs, state_h= decoder_gru(decoder_inputs, initial_state=decoder_state_input_h)
+    decoder_outputs, state_h = decoder_gru(
+        decoder_inputs, initial_state=decoder_state_input_h)
 
     decoder_outputs = decoder_dense(decoder_outputs)
-    decoder_model = Model([decoder_inputs, decoder_state_input_h], [decoder_outputs, state_h])
+    decoder_model = Model([decoder_inputs, decoder_state_input_h], [
+                          decoder_outputs, state_h])
 
     return model, encoder_model, decoder_model
 
 
-def conv_multi_model(n_input, n_output, n_feature, n_units, feat_units = 5):
+def conv_multi_model(n_input, n_output, n_feature, n_units, feat_units=5):
     root_word_input = Input(shape=(15, 28, 1), name="root_word_input")
-    word_index = Input(shape=(2,), name="word_index")
+    word_index = Input(shape=(3,), name="word_index")
     feature_input = Input(shape=(n_feature,), name="word_feature_input")
+
     feat = Concatenate(name="feature_word_index")([feature_input, word_index])
-    feat_out = Dense(feat_units, activation="relu", name="feature_output")(feature_input)
-    
-    x = Conv2D(20, (5, 5), padding='same', activation='relu', name="cnn")(root_word_input)
+    feat_out = Dense(feat_units, activation="relu",
+                     name="feature_output")(feat)
+
+    x = Conv2D(20, (5, 5), padding='same', activation='relu',
+               name="cnn")(root_word_input)
     x = MaxPooling2D(3, 3, name="pooling")(x)
 
     flat_output = Flatten(name="flatten")(x)
-    x = Dense(n_units - feat_units, activation='relu', name="cnn_encoder")(flat_output)
-    
+    x = Dense(n_units - feat_units, activation='relu',
+              name="cnn_encoder")(flat_output)
+
     state_h = Concatenate(name="concatnate")([x, feat_out])
-    
+
     decoder_inputs = Input(shape=(None, n_output), name="target_word_input")
-    decoder_gru = GRU(n_units, return_sequences=True, return_state=True, name="decoder_gru")
-    decoder_outputs, _= decoder_gru(decoder_inputs, initial_state=state_h)
-    
+    decoder_gru = GRU(n_units, return_sequences=True,
+                      return_state=True, name="decoder_gru")
+    decoder_outputs, _ = decoder_gru(decoder_inputs, initial_state=state_h)
+
     decoder_dense = Dense(n_output, activation='softmax', name="train_output")
     decoder_outputs = decoder_dense(decoder_outputs)
-    
-    model = Model([root_word_input, decoder_inputs, feature_input, word_index], decoder_outputs)
-    encoder_model = Model([root_word_input, feature_input, word_index], state_h)
-    
+
+    model = Model([root_word_input, decoder_inputs,
+                   feature_input, word_index], decoder_outputs)
+    encoder_model = Model(
+        [root_word_input, feature_input, word_index], state_h)
+
     decoder_state_input_h = Input(shape=(n_units,))
-    decoder_outputs, state_h= decoder_gru(decoder_inputs, initial_state=decoder_state_input_h)
+    decoder_outputs, state_h = decoder_gru(
+        decoder_inputs, initial_state=decoder_state_input_h)
 
     decoder_outputs = decoder_dense(decoder_outputs)
-    decoder_model = Model([decoder_inputs, decoder_state_input_h], [decoder_outputs, state_h])
+    decoder_model = Model([decoder_inputs, decoder_state_input_h], [
+                          decoder_outputs, state_h])
 
     return model, encoder_model, decoder_model
 
-def onehot_model(n_words, n_output, n_feature, n_units, feat_units = 5):
+
+def onehot_model(n_words, n_output, n_feature, n_units, feat_units=5):
     root_word_input = Input(shape=(1,), name="root_word_input")
     feature_input = Input(shape=(n_feature,), name="word_feature_input")
 
     x = Embedding(n_words, (n_units - feat_units))(root_word_input)
 
-    feat_out = Dense(feat_units, activation="relu", name="feature_output")(feature_input)
-    
+    feat_out = Dense(feat_units, activation="relu",
+                     name="feature_output")(feature_input)
+
     # x = Dense(n_units - feat_units, activation='relu', name="cnn_encoder")(flat_output)
     x = Flatten()(x)
     state_h = Concatenate(name="concatnate")([x, feat_out])
-    
+
     decoder_inputs = Input(shape=(None, n_output), name="target_word_input")
-    decoder_gru = GRU(n_units, return_sequences=True, return_state=True, name="decoder_gru")
-    decoder_outputs, _= decoder_gru(decoder_inputs, initial_state=state_h)
-    
+    decoder_gru = GRU(n_units, return_sequences=True,
+                      return_state=True, name="decoder_gru")
+    decoder_outputs, _ = decoder_gru(decoder_inputs, initial_state=state_h)
+
     decoder_dense = Dense(n_output, activation='softmax', name="train_output")
     decoder_outputs = decoder_dense(decoder_outputs)
-    
-    model = Model([root_word_input, decoder_inputs, feature_input], decoder_outputs)
+
+    model = Model([root_word_input, decoder_inputs,
+                   feature_input], decoder_outputs)
     encoder_model = Model([root_word_input, feature_input], state_h)
-    
+
     decoder_state_input_h = Input(shape=(n_units,))
-    decoder_outputs, state_h= decoder_gru(decoder_inputs, initial_state=decoder_state_input_h)
+    decoder_outputs, state_h = decoder_gru(
+        decoder_inputs, initial_state=decoder_state_input_h)
 
     decoder_outputs = decoder_dense(decoder_outputs)
-    decoder_model = Model([decoder_inputs, decoder_state_input_h], [decoder_outputs, state_h])
+    decoder_model = Model([decoder_inputs, decoder_state_input_h], [
+                          decoder_outputs, state_h])
 
     return model, encoder_model, decoder_model
+
 
 def predict(infenc, infdec, inputs, n_steps, cardinality):
     # encode
@@ -121,12 +144,11 @@ def predict(infenc, infdec, inputs, n_steps, cardinality):
     output = list()
     for t in range(n_steps):
         # predict next char
-        yhat, h= infdec.predict([target_seq, state])
+        yhat, h = infdec.predict([target_seq, state])
         # store prediction
-        output.append(yhat[0,0,:])
+        output.append(yhat[0, 0, :])
         # update state
         state = h
         # update target sequence
         target_seq = yhat
     return np.array(output)
-
