@@ -7,7 +7,7 @@ def read(file='data/heb/hebrew-task1-train', feature_map=None):
     root2feat = {}
     for line in lines:
         line = line[:-1]
-        root, feat, word = line.split('\t')
+        root, feat, word = line.split(' ')
         
         feat = feat.split(',')
         current_feat = {}
