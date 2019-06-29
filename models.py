@@ -1,25 +1,25 @@
-from keras.models import Sequential
-from keras.layers import Dense
-from keras.layers import Dropout
-from keras.layers import LSTM, TimeDistributed
-from keras.layers import Concatenate, Flatten
-from keras.layers import GRU, Conv2D, MaxPooling2D
-from keras.layers import Input, Reshape
-from keras.models import Model
-from keras.optimizers import Adam
-from keras.optimizers import RMSprop
-from keras.utils.vis_utils import plot_model
-import keras
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dropout
+from tensorflow.keras.layers import LSTM, TimeDistributed
+from tensorflow.keras.layers import Concatenate, Flatten
+from tensorflow.keras.layers import GRU, Conv2D, MaxPooling2D
+from tensorflow.keras.layers import Input, Reshape
+from tensorflow.keras.models import Model
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers import RMSprop
+# from tensorflow.keras.utils.vis_utils import plot_model
+import tensorflow.keras as keras
 import numpy as np
 
 
-def conv_model(root_h, root_w, decoder_input, decoder_output, n_feature, hidden_size, feat_units = 5):
+def conv_model(root_h, root_w, decoder_input, decoder_output, n_feature, hidden_size, feat_units = 15):
     root_word_input = Input(shape=(root_h, root_w, 1), name="root_word_input")
     feature_input = Input(shape=(n_feature,), name="word_feature_input")
     feat_out = Dense(feat_units, activation="relu", name="feature_output")(feature_input)
     
-    x = Conv2D(20, (5, 5), padding='same', activation='relu')(root_word_input)
-    x = MaxPooling2D(3, 3)(x)
+    x = Conv2D(32, (5, 5), padding='same', activation='relu')(root_word_input)
+    x = MaxPooling2D(2, 2)(x)
 
     x = Flatten()(x)
     # x = Concatenate()([x, feat_out])

@@ -1,3 +1,7 @@
 {
+<<<<<<< HEAD
     "python.pythonPath": "/home/leo/anaconda3/envs/tf2/bin/python"
+=======
+    "python.pythonPath": "C:\\Users\\amany\\Anaconda2\\envs\\tf2\\python.exe"
+>>>>>>> 5bdcf056fb1926f8d3757ef8b0a4f25e990cc48d
 }
