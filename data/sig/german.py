@@ -1,5 +1,5 @@
 import random
-lines = open("hungarian-task3-merged", encoding='utf-8').readlines()
+lines = open("german-task3-merged", encoding='utf-8').readlines()
 data = []
 for line in lines:
     root, feat, word = line[:-1].split('\t')
@@ -9,9 +9,8 @@ for line in lines:
 random.shuffle(data)
 print(len(data))
 total = len(data)
-tests = int((total * 1600.0)/12800.0)
-file = open("hungarian-test.txt", encoding='utf-8', mode='w')
-for i in range(tests):
+file = open("german-test.txt", encoding='utf-8', mode='w')
+for i in range(1600):
     root, feat, word = data[i]
     ft = feat.split(',')
     ft_new = []
@@ -25,8 +24,8 @@ for i in range(tests):
     line = "{0} {1} {2}\n".format(root, ft, word)
     file.write(line)
 file.close()
-file = open("hungarian-train.txt", encoding='utf-8', mode='w')
-for i in range(tests, len(data)):
+file = open("german-train.txt", encoding='utf-8', mode='w')
+for i in range(1600, len(data)):
     root, feat, word = data[i]
     ft = feat.split(',')
     ft_new = []
