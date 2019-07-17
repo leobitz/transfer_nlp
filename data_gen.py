@@ -116,8 +116,8 @@ class DataGen:
                 featX.append(word_feature)
                 y.append(target_encoded)
                 word_indexes.append(self.word_indexes[i])
-
-            yield [np.array(rootX), np.array(target_inX), np.array(featX), np.array(word_indexes)], np.array(y)
+            feat = np.concatenate([np.array(featX), np.array(word_indexes)], axis=1)
+            yield [np.array(rootX), np.array(target_inX), feat], np.array(y)
             batch += 1
             if batch == total_batchs or batch == n_batches:
                 batch = min_batch
@@ -148,9 +148,8 @@ class DataGen:
                 featX.append(word_feature)
                 y.append(target_encoded)
                 word_indexes.append(self.word_indexes[i])
-            feat = np.concatenate(
-                [np.array(featX), np.array(word_indexes)], axis=1)
-            yield [np.array(rootX), np.array(target_inX), feat], np.array(y)
+            feat = np.concatenate([np.array(featX, dtype=np.float32), np.array(word_indexes, dtype=np.float32)], axis=1)
+            yield [np.array(rootX, dtype=np.float32), np.array(target_inX, dtype=np.float32), feat], np.array(y)
             batch += 1
             if batch == total_batchs or batch == n_batches:
                 batch = min_batch
