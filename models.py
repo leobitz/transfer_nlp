@@ -16,6 +16,7 @@ from tensorflow.keras.optimizers import RMSprop
 <<<<<<< HEAD
 import tensorflow.keras
 import numpy as np
+# from attention_lstm import *
 
 
 def conv_model(n_input, n_output, n_feature, n_units, feat_units=5):
@@ -94,12 +95,12 @@ def conv_model(root_h, root_w, decoder_input, decoder_output, n_feature, hidden_
 
 def conv_multi_model(n_input, n_output, n_feature, n_units, feat_units=5):
     root_word_input = Input(shape=(15, 28, 1), name="root_word_input")
-    word_index = Input(shape=(3,), name="word_index")
+    # word_index = Input(shape=(3,), name="word_index")
     feature_input = Input(shape=(n_feature,), name="word_feature_input")
 
-    feat = Concatenate(name="feature_word_index")([feature_input, word_index])
+    # feat = Concatenate(name="feature_word_index")([feature_input, word_index])
     feat_out = Dense(feat_units, activation="relu",
-                     name="feature_output")(feat)
+                     name="feature_output")(feature_input)
 
     x = Conv2D(20, (5, 5), padding='same', activation='relu',
                name="cnn")(root_word_input)
@@ -120,9 +121,9 @@ def conv_multi_model(n_input, n_output, n_feature, n_units, feat_units=5):
     decoder_outputs = decoder_dense(decoder_outputs)
 
     model = Model([root_word_input, decoder_inputs,
-                   feature_input, word_index], decoder_outputs)
+                   feature_input], decoder_outputs)
     encoder_model = Model(
-        [root_word_input, feature_input, word_index], state_h)
+        [root_word_input, feature_input], state_h)
 
     decoder_state_input_h = Input(shape=(n_units,))
     decoder_outputs, state_h = decoder_gru(
@@ -170,6 +171,85 @@ def onehot_model(n_words, n_output, n_feature, n_units, feat_units=5):
 
     return model, encoder_model, decoder_model
 
+def rnn_multi_input(n_input, n_output, n_feature, n_enc_units, n_dec_units):
+    # define training encoder
+    feat_units = 15
+    encoder_inputs = Input(shape=(None, n_input), name="root_word_input")
+    encoder = LSTM(n_enc_units, return_state=True, name="encoder_lstm")
+    # word_index = Input(shape=(3,), name="word_index")
+    feature_input = Input(shape=(n_feature,), name="word_feature_input")
+    # feat = Concatenate(name="feature_word_index")([feature_input, word_index])
+
+    encoder_outputs, state_h, state_c = encoder(encoder_inputs)
+    
+    
+    feat_out = Dense(feat_units, activation="relu", name="feature_output")(feature_input)
+    x = Concatenate()([state_h, feat_out])
+    x2 = Concatenate()([state_c, feat_out])
+    state_h = Dense(n_dec_units, activation='relu')(x)
+    state_c = Dense(n_dec_units, activation='relu')(x2)
+    encoder_states = [state_h, state_c]
+    
+    decoder_inputs = Input(shape=(None, n_output), name="target_word_input")
+    decoder_lstm = LSTM(n_dec_units, return_sequences=True, return_state=True, name="decoder_lstm")
+    decoder_outputs, _, _ = decoder_lstm(decoder_inputs, initial_state=encoder_states)
+    decoder_dense = Dense(n_output, activation='softmax', name="train_output")
+    decoder_outputs = decoder_dense(decoder_outputs)
+    
+    model = Model([encoder_inputs, decoder_inputs, feature_input], decoder_outputs)
+
+    encoder_model = Model([encoder_inputs, feature_input], encoder_states)
+    # define inference decoder
+    decoder_state_input_h = Input(shape=(n_dec_units,))
+    decoder_state_input_c = Input(shape=(n_dec_units,))
+    decoder_states_inputs = [decoder_state_input_h, decoder_state_input_c]
+    decoder_outputs, state_h, state_c = decoder_lstm(decoder_inputs, initial_state=decoder_states_inputs)
+    decoder_states = [state_h, state_c]
+
+    decoder_outputs = decoder_dense(decoder_outputs)
+    decoder_model = Model([decoder_inputs] + decoder_states_inputs, [decoder_outputs] + decoder_states)
+
+    return model, encoder_model, decoder_model
+# def rnn_model_att(n_input, n_output, n_feature, n_enc_units, n_dec_units):
+#     # define training encoder
+#     feat_units = 15
+#     encoder_inputs = Input(shape=(None, n_input), name="root_word_input")
+#     encoder = LSTM(n_enc_units, return_state=True, name="encoder_lstm")
+#     encoder_outputs, state_h, state_c = encoder(encoder_inputs)
+    
+#     feature_input = Input(shape=(n_feature,), name="word_feature_input")
+#     feat_out = Dense(feat_units, activation="relu", name="feature_output")(feature_input)
+#     x = Concatenate()([state_h, feat_out])
+#     x2 = Concatenate()([state_c, feat_out])
+#     state_h = Dense(n_dec_units, activation='relu')(x)
+#     state_c = Dense(n_dec_units, activation='relu')(x2)
+#     encoder_states = [state_h, state_c]
+    
+#     decoder_inputs = Input(shape=(None, n_output), name="target_word_input")
+#     decoder_lstm = LSTM(n_dec_units, return_sequences=True, return_state=True, name="decoder_lstm")
+#     decoder_outputs, _, _ = decoder_lstm(decoder_inputs, initial_state=encoder_states)
+
+#     attn_layer = AttentionLayer(name='attention_layer')
+#     attn_out, attn_states = attn_layer([encoder_outputs, decoder_outputs])
+#     decoder_concat_input = Concatenate(axis=-1, name='concat_layer')([decoder_outputs, attn_out])
+
+#     decoder_dense = Dense(n_output, activation='softmax', name="train_output")
+#     decoder_outputs = decoder_dense(decoder_concat_input)
+    
+#     model = Model([encoder_inputs, decoder_inputs, feature_input], decoder_outputs)
+
+#     encoder_model = Model([encoder_inputs, feature_input], encoder_states)
+#     # define inference decoder
+#     decoder_state_input_h = Input(shape=(n_dec_units,))
+#     decoder_state_input_c = Input(shape=(n_dec_units,))
+#     decoder_states_inputs = [decoder_state_input_h, decoder_state_input_c]
+#     decoder_outputs, state_h, state_c = decoder_lstm(decoder_inputs, initial_state=decoder_states_inputs)
+#     decoder_states = [state_h, state_c]
+
+#     decoder_outputs = decoder_dense(decoder_outputs)
+#     decoder_model = Model([decoder_inputs] + decoder_states_inputs, [decoder_outputs] + decoder_states)
+
+#     return model, encoder_model, decoder_model
 
 def predict(infenc, infdec, inputs, n_steps, cardinality):
     # encode
