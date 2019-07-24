@@ -3,7 +3,7 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import Dropout
 from tensorflow.keras.layers import LSTM, TimeDistributed
 from tensorflow.keras.layers import Concatenate, Flatten
-from tensorflow.keras.layers import GRU, Conv2D, MaxPooling2D
+from tensorflow.keras.layers import GRU, Conv2D, MaxPooling2D, Embedding
 from tensorflow.keras.layers import Input, Reshape
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
@@ -46,6 +46,7 @@ def conv_model(root_h, root_w, decoder_input, decoder_output, n_feature, hidden_
                           decoder_outputs, state_h])
 
     return model, encoder_model, decoder_model
+
 
 
 def conv_multi_model(n_input, n_output, n_feature, n_units, feat_units=5):
