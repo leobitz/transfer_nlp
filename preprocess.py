@@ -1,16 +1,19 @@
 
 import numpy as np
-def process():
+def process(langs=None):
     chars = {}
-    feats = {}
+    feats = {"lang": []}
     max_root, max_word = 0, 0
-    langs = ["arabic", "finnish", "georgian", "german", "hungarian", "navajo", "russian", "spanish", "turkish"]
+    if langs is None:
+        langs = ["arabic", "finnish", "georgian", "german", "hungarian", "navajo", "russian", "spanish", "turkish"]
 
     for lang in langs:
+        feats['lang'].append(lang)
         lines = open("data/sig/{0}-train.txt".format(lang), encoding='utf-8').readlines()
         for line in lines:
             root, feat, word = line[:-1].split(' ')
             feat = feat.split(',')
+            # print(feat)
             for ft in feat:
                 key, val = ft.split('=')
                 if key not in feats:
@@ -18,6 +21,7 @@ def process():
 
                 if val not in feats[key]:
                     feats[key].append(val)
+
             if len(root) > max_root:
                 max_root = len(root)
             if len(word) > max_word:
@@ -62,10 +66,11 @@ def word_index_2_one_hot(indexes, max_len):
     return vecs
     
 
-def convert(char2int, feat2val, max_root_len, max_word_len, train_set=True):
+def convert(char2int, feat2val, max_root_len, max_word_len, train_set=True, langs=None):
     max_root_len = max_root_len + 2
     max_word_len = max_word_len + 2
-    langs = ["arabic", "finnish", "georgian", "german", "hungarian", "navajo", "russian", "spanish", "turkish"]
+    if langs is None:
+        langs = ["arabic", "finnish", "georgian", "german", "hungarian", "navajo", "russian", "spanish", "turkish"]
     root_data, feat_data, in_data, out_data = [], [] ,[], []
     for lang in langs:
         if train_set == True:
@@ -81,6 +86,7 @@ def convert(char2int, feat2val, max_root_len, max_word_len, train_set=True):
             for ft in feat:
                 key, val = ft.split('=')
                 current_feats[key] = val
+            current_feats['lang'] = lang
 
             for ft in feat2val:
                 if ft in current_feats:
@@ -89,26 +95,22 @@ def convert(char2int, feat2val, max_root_len, max_word_len, train_set=True):
                     vec = [0]*(len(feat2val[ft]) + 1)
                     vec[-1] = 1
                     feat_vecs += vec
-
+            
+            # print(root)
             root_vec = word_to_index('<' + root + '>', char2int, max_root_len, ' ')
-
             word_vec_in = word_to_index('<' + word + '>', char2int, max_word_len, ' ')
             word_vec_out = word_to_index(word + "> ", char2int, max_word_len, ' ')
             output = word_index_2_one_hot(word_vec_out, len(char2int))
-
-            root_vec = np.array(root_vec, dtype=np.int32)
-            feat_vecs = np.array(feat_vecs, dtype=np.float32)
-            word_vec_in = np.array(word_vec_in, dtype=np.int32)
-            output = np.array(output, dtype=np.float32)
 
             root_data.append(root_vec)
             feat_data.append(feat_vecs)
             in_data.append(word_vec_in)
             out_data.append(output)
-    root_data = np.stack(root_data)
-    feat_data = np.stack(feat_data)
-    in_data = np.stack(in_data)
-    out_data = np.stack(out_data)
+
+    root_data = np.array(root_data, dtype=np.int32)
+    feat_data = np.array(feat_data, dtype=np.float32)
+    in_data = np.array(in_data, dtype=np.int32)
+    out_data = np.array(out_data, dtype=np.float32)
     return root_data, feat_data, in_data, out_data
 
 def gen(data, batch_size=64, max_batch=-1):
