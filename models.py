@@ -48,6 +48,46 @@ def conv_model(root_h, root_w, decoder_input, decoder_output, n_feature, hidden_
     return model, encoder_model, decoder_model
 
 
+def conv_multi_model_emb(vocab_size, input_length, decoder_input, dec_output_length, 
+                    n_feature, hidden_size, feat_units = 15, embed_size=64):
+    root_word_input = Input(shape=(input_length, ), name="root_word_input")
+    feature_input = Input(shape=(n_feature,), name="word_feature_input")
+
+    feat_out = Dense(feat_units, activation="relu", name="feature_embedding")(feature_input)
+    embedding = Embedding(vocab_size, embed_size, input_length=input_length, name="char_embedding")
+    x = embedding(root_word_input)
+    
+    x = Reshape([input_length, embed_size, 1])(x)
+#     x = keras.backend.expand_dims(x, -1)
+    x = Conv2D(32, (3, 3), padding='same', activation='relu')(x)
+    x = MaxPooling2D(2, 2)(x)
+
+    x = Flatten()(x)
+    x = Concatenate()([x, feat_out])
+    state_h = Dense(hidden_size, activation="relu", name="state_h")(x)
+
+    decoder_inputs = Input(shape=(None,), name="target_word_input")
+    decoder_gru = GRU(hidden_size, return_sequences=True,
+                      return_state=True, name="decoder_gru")
+    decoder_outputs, _ = decoder_gru(decoder_inputs, initial_state=state_h)
+
+    decoder_dense = Dense(dec_output_length, activation='softmax', name="train_output")
+    decoder_outputs = decoder_dense(decoder_outputs)
+
+    model = Model([root_word_input, decoder_inputs,
+                   feature_input], decoder_outputs)
+    encoder_model = Model(
+        [root_word_input, feature_input], state_h)
+
+    decoder_state_input_h = Input(shape=(hidden_size,))
+    decoder_outputs, state_h = decoder_gru(
+        decoder_inputs, initial_state=decoder_state_input_h)
+
+    decoder_outputs = decoder_dense(decoder_outputs)
+    decoder_model = Model([decoder_inputs, decoder_state_input_h], [
+                          decoder_outputs, state_h])
+
+    return model, encoder_model, decoder_model
 
 def conv_multi_model(n_input, n_output, n_feature, n_units, feat_units=5):
     root_word_input = Input(shape=(15, 28, 1), name="root_word_input")
@@ -63,8 +103,7 @@ def conv_multi_model(n_input, n_output, n_feature, n_units, feat_units=5):
     x = MaxPooling2D(3, 3, name="pooling")(x)
 
     flat_output = Flatten(name="flatten")(x)
-    x = Dense(n_units - feat_units, activation='relu',
-              name="cnn_encoder")(flat_output)
+    x = Dense(n_units - feat_units, activation='relu',name="cnn_encoder")(flat_output)
 
     state_h = Concatenate(name="concatnate")([x, feat_out])
 

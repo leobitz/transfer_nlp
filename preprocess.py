@@ -44,10 +44,26 @@ def word_to_index(word, char2int, max_len, pad_char):
     vec = vec + [char2int[pad_char]]*(max_len - len(word))
     return vec
 
+def one_hot(index, max):
+    vec = [0] * max
+    vec[index] = 1
+    return vec
+
+def word_to_matrix(word, char2int, max_len, pad_char):
+    vec = [one_hot(char2int[w], len(char2int)) for w in word]
+    spaces = [one_hot(char2int[pad_char], len(char2int))] * (max_len - len(word))
+    return vec + spaces
+
 def index_to_word(indexes, int2char):
     chars = []
     for i in indexes:
         chars.append(int2char[i])
+    return chars
+
+def matrix_to_word(mat, int2char):
+    chars = []
+    for m in mat:
+        chars.append(int2char[m.argmax()])
     return chars
 
 
@@ -66,7 +82,7 @@ def word_index_2_one_hot(indexes, max_len):
     return vecs
     
 
-def convert(char2int, feat2val, max_root_len, max_word_len, train_set=True, langs=None):
+def convert(char2int, feat2val, max_root_len, max_word_len, train_set=True, langs=None, for_cnn=False):
     max_root_len = max_root_len + 2
     max_word_len = max_word_len + 2
     if langs is None:
@@ -97,25 +113,35 @@ def convert(char2int, feat2val, max_root_len, max_word_len, train_set=True, lang
                     feat_vecs += vec
             
             # print(root)
-            root_vec = word_to_index('<' + root + '>', char2int, max_root_len, ' ')
-            word_vec_in = word_to_index('<' + word + '>', char2int, max_word_len, ' ')
+            if for_cnn:
+                root_vec = word_to_matrix('<' + root + '>', char2int, max_root_len, ' ')   
+                word_vec_in = word_to_matrix('<' + word + '>', char2int, max_word_len, ' ') 
+            else:
+                root_vec = word_to_index('<' + root + '>', char2int, max_root_len, ' ')
+                word_vec_in = word_to_index('<' + word + '>', char2int, max_word_len, ' ')
             word_vec_out = word_to_index(word + "> ", char2int, max_word_len, ' ')
             output = word_index_2_one_hot(word_vec_out, len(char2int))
-
             root_data.append(root_vec)
             feat_data.append(feat_vecs)
             in_data.append(word_vec_in)
             out_data.append(output)
 
-    root_data = np.array(root_data, dtype=np.int32)
+    if for_cnn:
+        root_data = np.array(root_data, dtype=np.float32)
+        in_data = np.array(in_data, dtype=np.float32)
+    else:
+        root_data = np.array(root_data, dtype=np.int32)
+        in_data = np.array(in_data, dtype=np.int32)
+
     feat_data = np.array(feat_data, dtype=np.float32)
-    in_data = np.array(in_data, dtype=np.int32)
     out_data = np.array(out_data, dtype=np.float32)
     return root_data, feat_data, in_data, out_data
 
 def gen(data, batch_size=64, max_batch=-1):
     current = 0
-    indexes = list(range(len(data[0])))
+    max_batch = len(data[0]) // batch_size
+    max_train= max_batch * batch_size
+    indexes = list(range(max_train))
     np.random.shuffle(indexes)
     while True:
         batch_indexes = indexes[current: current + batch_size]
@@ -125,7 +151,7 @@ def gen(data, batch_size=64, max_batch=-1):
         batch_out = data[3][batch_indexes]
         current += batch_size
 
-        if current > len(data[0]):
+        if current >= max_train:
             np.random.shuffle(indexes)
             current = 0
 
