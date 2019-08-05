@@ -27,10 +27,11 @@ args = parser.parse_args()
 # In[ ]:
 
 
-char2int, feat2val, max_r, max_w = pre.process(['russian'])
-data = pre.convert(char2int, feat2val, max_r, max_w, langs=['russian'], for_cnn=True)
-clean_data = pre.convert(char2int, feat2val, max_r, max_w, langs=['russian'], train_set=False, for_cnn=True)
-gen_data = pre.convert(char2int, feat2val, max_r, max_w, langs=['russian'], train_set=False, for_cnn=True)
+char2int, feat2val, max_r, max_w = pre.process(['wol-14'])
+# print(feat2val)
+data = pre.convert(char2int, feat2val, max_r, max_w, langs=['wol-14'], for_cnn=True)
+clean_data = pre.convert(char2int, feat2val, max_r, max_w, langs=['wol-14'], train_set=False, for_cnn=True)
+gen_data = pre.convert(char2int, feat2val, max_r, max_w, langs=['wol'], train_set=False, for_cnn=True)
 int2char = {val: key for val, key in enumerate(char2int)}
 
 
@@ -57,54 +58,21 @@ class Encoder(tf.keras.Model):
         super(Encoder, self).__init__()
         self.batch_size = batch_size
         self.enc_units = enc_units
-        self.gru = tf.keras.layers.GRU(self.enc_units,
-                                       return_sequences=True,
-                                       return_state=True,
-                                       recurrent_initializer='glorot_uniform', name="encoder_gru")
+        self.cnn = tf.keras.layers.Conv2D(32, (3, 3), padding="same", activation="relu")
+        self.pool = tf.keras.layers.MaxPool2D(2, 2)
+        self.flat = tf.keras.layers.Flatten()
+
         self.fc1 = tf.keras.layers.Dense(feat_units, activation="relu", name="feature_output")
         self.fc2 = tf.keras.layers.Dense(enc_units, activation="relu", name="state_out")
         
-    def call(self, w, f, hidden):
-        output, state = self.gru(w, initial_state=hidden)
+    def call(self, w, f):
+        x = self.cnn(w)
+        x = self.pool(x)
+        x = self.flat(x)
         feat = self.fc1(f)
-        state = tf.concat([state, feat], axis=1)
+        state = tf.concat([x, feat], axis=1)
         state = self.fc2(state)
-        return output, state, feat
-
-    def initialize_hidden_state(self):
-        return tf.zeros((self.batch_size, self.enc_units), dtype=tf.float32)
-
-
-# In[ ]:
-
-
-class BahdanauAttention(tf.keras.Model):
-    def __init__(self, units):
-        super(BahdanauAttention, self).__init__()
-        self.W1 = tf.keras.layers.Dense(units)
-        self.W2 = tf.keras.layers.Dense(units)
-        self.V = tf.keras.layers.Dense(1)
-
-    def call(self, query, values):
-        # hidden shape == (batch_size, hidden size)
-        # hidden_with_time_axis shape == (batch_size, 1, hidden size)
-        # we are doing this to perform addition to calculate the score
-        hidden_with_time_axis = tf.expand_dims(query, 1)
-
-        # score shape == (batch_size, max_length, 1)
-        # we get 1 at the last axis because we are applying score to self.V
-        # the shape of the tensor before applying self.V is (batch_size, max_length, units)
-        score = self.V(tf.nn.tanh(
-            self.W1(values) + self.W2(hidden_with_time_axis)))
-
-        # attention_weights shape == (batch_size, max_length, 1)
-        attention_weights = tf.nn.softmax(score, axis=1)
-
-        # context_vector shape after sum == (batch_size, hidden_size)
-        context_vector = attention_weights * values
-        context_vector = tf.reduce_sum(context_vector, axis=1)
-
-        return context_vector, attention_weights
+        return state, feat
 
 
 # In[ ]:
@@ -121,13 +89,10 @@ class Decoder(tf.keras.Model):
                                        recurrent_initializer='glorot_uniform', name="decoder_gru")
         self.fc = tf.keras.layers.Dense(output_size, activation="softmax")
 
-        self.attention = BahdanauAttention(self.dec_units)
 
-    def call(self, x, hidden, enc_output, feat):
+    def call(self, x, feat, hidden):
         # enc_output shape == (batch_size, max_length, hidden_size)
-        context_vector, attention_weights = self.attention(hidden, enc_output)
-
-        x = tf.concat([context_vector, x, feat], axis=-1)
+        # x = tf.concat([context_vector, x, feat], axis=-1)
         x = tf.expand_dims(x, 1)
         output, state = self.gru(x, initial_state=hidden)
         output = tf.reshape(output, (-1, output.shape[2]))
@@ -142,8 +107,7 @@ class Decoder(tf.keras.Model):
 def predict(encoder, decoder, inputs, n_steps):
     # encode
     root, feat = inputs[0], inputs[1]
-    enc_hidden = encoder.initialize_hidden_state()
-    enc_output, state, feat = encoder(inputs[0], inputs[1], enc_hidden)
+    state, feat = encoder(inputs[0], inputs[1])
     
     start_word = '<'
     start_mat = pre.word_to_matrix(start_word, char2int, 1, ' ')
@@ -152,7 +116,7 @@ def predict(encoder, decoder, inputs, n_steps):
     outputs = list()
     for t in range(n_steps):
         # predict next char
-        target_seq, state = decoder(target_seq, state, enc_output, feat)
+        target_seq, state = decoder(target_seq, feat, state)
         
         outputs.append(target_seq)
     return np.stack(outputs)
@@ -164,6 +128,11 @@ def predict(encoder, decoder, inputs, n_steps):
 decoder = Decoder(hidden_size, len(char2int), batch_size)
 encoder = Encoder(hidden_size, feat_embed_size, batch_size)
 
+# x = np.random.randn(10, 15, 28,1)
+# f = np.random.randn(10, 32)
+# h = tf.cast(np.random.randn(10, 256), tf.float64)
+# x, f = encoder(x, f)
+# decoder(x, f, None)
 
 # In[ ]:
 
@@ -181,16 +150,16 @@ def loss_function(real, pred):
 
 
 @tf.function
-def train_step(root, feature, dec_input, target, enc_hidden):
+def train_step(root, feature, dec_input, target):
     loss = 0
     
     with tf.GradientTape() as tape:
-        enc_output, enc_hidden, feat = encoder(root, feature, enc_hidden)
-
+        enc_hidden, feat = encoder(root, feature)
+        # print(enc_hidden.shape)
         dec_hidden = enc_hidden
 
         for t in range(target.shape[1]):
-            predictions, dec_hidden = decoder(dec_input[:, t], dec_hidden, enc_output, feat)
+            predictions, dec_hidden = decoder(dec_input[:, t], feat, dec_hidden)
             loss += loss_function(target[:, t], predictions)
 
         batch_loss = (loss / int(target.shape[1]))
@@ -205,7 +174,7 @@ def train_step(root, feature, dec_input, target, enc_hidden):
 # In[ ]:
 
 
-def test_model(test_data):
+def test_model(test_data, log=False):
     test_n_batches, test_batch_size =  int(test_data[0].shape[0] / batch_size), batch_size  
     print(test_n_batches * test_batch_size)
     test_gen = pre.gen(test_data, batch_size, shuffle=False)
@@ -217,6 +186,7 @@ def test_model(test_data):
     for b in range(test_batches - 1):
         # get data from test data generator
         [root, feat, dec_in], y = next(test_gen)
+        root = np.expand_dims(root, axis=3)
         pred = predict(encoder, decoder, [root, feat], max_word)
         for k in range(pred.shape[1]):
             indexes = pred[:, k]#.argmax(axis=1)
@@ -225,8 +195,9 @@ def test_model(test_data):
             t = ''.join(pre.matrix_to_word(indexes, int2char)).strip()[:-1]
             if w == t:
                 correct += 1
-    #         else:
-    #             print(r, w, t)
+            else:
+                if log:
+                    print(r, w, t)
 
 
         total += batch_size
@@ -245,12 +216,13 @@ gen = pre.gen(data, batch_size)
 for epoch in range(EPOCHS):
     start = time.time()
 
-    enc_hidden = encoder.initialize_hidden_state()
+    # enc_hidden = encoder.initialize_hidden_state()
     total_loss = 0
 
     for step in range(n_batches):
         [root, feat, dec_in], y = next(gen)
-        batch_loss = train_step(root, feat, dec_in, y, enc_hidden)
+        root = np.expand_dims(root, axis=3)
+        batch_loss = train_step(root, feat, dec_in, y)
         total_loss += batch_loss
 
 #         if step % (n_batches // 1) == 0:
@@ -261,7 +233,6 @@ for epoch in range(EPOCHS):
     gen_accuracy = test_model(gen_data)
     print('Epoch {} Loss {:.4f} Gen Accuracy {:.4f} Clean Accuracy {:.4f}'.format(epoch + 1,total_loss / n_batches, gen_accuracy, clean_accuracy))
     
-
 
 # In[ ]:
 

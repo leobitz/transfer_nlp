@@ -68,6 +68,7 @@ def matrix_to_word(mat, int2char):
 
 
 def feat_to_vec(feat, val, feat2val):
+    # print(val)
     feat_index = feat2val[feat].index(val)
     vec = [0] * (len(feat2val[feat]) + 1)
     vec[feat_index] = 1
@@ -83,6 +84,7 @@ def word_index_2_one_hot(indexes, max_len):
     
 
 def convert(char2int, feat2val, max_root_len, max_word_len, train_set=True, langs=None, for_cnn=False):
+    # print(feat2val)
     max_root_len = max_root_len + 2
     max_word_len = max_word_len + 2
     if langs is None:
@@ -99,10 +101,11 @@ def convert(char2int, feat2val, max_root_len, max_word_len, train_set=True, lang
             feat = feat.split(',')
             current_feats = {}
             feat_vecs = []
+            # print(feat)
             for ft in feat:
                 key, val = ft.split('=')
                 current_feats[key] = val
-            current_feats['lang'] = lang
+            # current_feats['lang'] = lang
 
             for ft in feat2val:
                 if ft in current_feats:
@@ -137,12 +140,13 @@ def convert(char2int, feat2val, max_root_len, max_word_len, train_set=True, lang
     out_data = np.array(out_data, dtype=np.float32)
     return root_data, feat_data, in_data, out_data
 
-def gen(data, batch_size=64, max_batch=-1):
+def gen(data, batch_size=64, max_batch=-1, shuffle=True):
     current = 0
     max_batch = len(data[0]) // batch_size
     max_train= max_batch * batch_size
     indexes = list(range(max_train))
-    np.random.shuffle(indexes)
+    if shuffle:
+        np.random.shuffle(indexes)
     while True:
         batch_indexes = indexes[current: current + batch_size]
         batch_root = data[0][batch_indexes]
@@ -152,7 +156,8 @@ def gen(data, batch_size=64, max_batch=-1):
         current += batch_size
 
         if current >= max_train:
-            np.random.shuffle(indexes)
+            if shuffle:
+                np.random.shuffle(indexes)
             current = 0
 
         yield [batch_root, batch_feat, batch_in], batch_out

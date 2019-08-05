@@ -34,11 +34,11 @@
 
 # wfile.close()
 lines = open('wolaytta-train.txt', encoding='utf-8').readlines()
-open('wolayita-train-14.txt', mode='w', encoding='utf-8').writelines(lines[:14780])
-open('wolayita-train-29.txt', mode='w', encoding='utf-8').writelines(lines[:14780*2])
-open('wolayita-train-44.txt', mode='w', encoding='utf-8').writelines(lines[:14780*3])
+open('woll-14-train.txt', mode='w', encoding='utf-8').writelines(lines[:14780])
+open('woll-29-train.txt', mode='w', encoding='utf-8').writelines(lines[:14780*2])
+open('woll-44-train.txt', mode='w', encoding='utf-8').writelines(lines[:14780*3])
 
-# open('wolayita-test-14000.txt', mode='w', encoding='utf-8').writelines(lines[-3500:])
-# open('wolayita-test-28000.txt', mode='w', encoding='utf-8').writelines(lines[-7000:])
-# open('wolayita-test-56000.txt', mode='w', encoding='utf-8').writelines(lines[-14000:])
+open('woll-14-test.txt', mode='w', encoding='utf-8').writelines(lines[-3500:])
+open('woll-29-test.txt', mode='w', encoding='utf-8').writelines(lines[-7000:])
+open('woll-44-test.txt', mode='w', encoding='utf-8').writelines(lines[-14000:])
 
