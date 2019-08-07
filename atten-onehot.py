@@ -21,16 +21,17 @@ parser.add_argument("--char_embed_size", type=int,  default=32)
 parser.add_argument("--feat_embed_size", type=int, default=32)
 parser.add_argument("--hidden_size", type=int, default=265)
 parser.add_argument("--epochs", type=int, default=50)
+parser.add_argument("--file_name", type=str, default='wol-14')
 args = parser.parse_args()
 
 
 # In[ ]:
 
 
-char2int, feat2val, max_r, max_w = pre.process(['russian'])
-data = pre.convert(char2int, feat2val, max_r, max_w, langs=['russian'], for_cnn=True)
-clean_data = pre.convert(char2int, feat2val, max_r, max_w, langs=['russian'], train_set=False, for_cnn=True)
-gen_data = pre.convert(char2int, feat2val, max_r, max_w, langs=['russian'], train_set=False, for_cnn=True)
+char2int, feat2val, max_r, max_w = pre.process([args.file_name])
+data = pre.convert(char2int, feat2val, max_r, max_w, langs=[args.file_name], for_cnn=True)
+clean_data = pre.convert(char2int, feat2val, max_r, max_w, langs=['wol'], train_set=False, for_cnn=True)
+gen_data = pre.convert(char2int, feat2val, max_r, max_w, langs=[args.file_name], train_set=False, for_cnn=True)
 int2char = {val: key for val, key in enumerate(char2int)}
 
 
@@ -207,7 +208,7 @@ def train_step(root, feature, dec_input, target, enc_hidden):
 
 def test_model(test_data):
     test_n_batches, test_batch_size =  int(test_data[0].shape[0] / batch_size), batch_size  
-    print(test_n_batches * test_batch_size)
+    # print(test_n_batches * test_batch_size)
     test_gen = pre.gen(test_data, batch_size, shuffle=False)
     # shows sample examples and calculates accuracy
     test_batches = len(test_data[0]) // batch_size
@@ -257,9 +258,10 @@ for epoch in range(EPOCHS):
 #             print('Epoch {} Batch {} Loss {:.4f}'.format(epoch + 1,
 #                                                      step,
 #                                                      batch_loss.numpy()))
+    elaps = time.time() - start
     clean_accuracy = test_model(clean_data)
     gen_accuracy = test_model(gen_data)
-    print('Epoch {} Loss {:.4f} Gen Accuracy {:.4f} Clean Accuracy {:.4f}'.format(epoch + 1,total_loss / n_batches, gen_accuracy, clean_accuracy))
+    print('Epoch {} Loss {:.4f} Gen Accuracy {:.4f} Clean Accuracy {:.4f} Time {:.4f}'.format(epoch + 1,total_loss / n_batches, gen_accuracy, clean_accuracy, elaps))
     
 
 

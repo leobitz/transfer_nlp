@@ -18,20 +18,21 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("--batch_size", type=int,  default=128)
 parser.add_argument("--char_embed_size", type=int,  default=32)
-parser.add_argument("--feat_embed_size", type=int, default=32)
+parser.add_argument("--feat_embed_size", type=int, default=16)
 parser.add_argument("--hidden_size", type=int, default=265)
 parser.add_argument("--epochs", type=int, default=50)
+parser.add_argument("--file_name", type=str, default='wol-14')
 args = parser.parse_args()
 
 
 # In[ ]:
 
 
-char2int, feat2val, max_r, max_w = pre.process(['wol-14'])
+char2int, feat2val, max_r, max_w = pre.process([args.file_name])
 # print(feat2val)
-data = pre.convert(char2int, feat2val, max_r, max_w, langs=['wol-14'], for_cnn=True)
-clean_data = pre.convert(char2int, feat2val, max_r, max_w, langs=['wol-14'], train_set=False, for_cnn=True)
-gen_data = pre.convert(char2int, feat2val, max_r, max_w, langs=['wol'], train_set=False, for_cnn=True)
+data = pre.convert(char2int, feat2val, max_r, max_w, langs=[args.file_name], for_cnn=True)
+clean_data = pre.convert(char2int, feat2val, max_r, max_w, langs=['wol'], train_set=False, for_cnn=True)
+gen_data = pre.convert(char2int, feat2val, max_r, max_w, langs=[args.file_name], train_set=False, for_cnn=True)
 int2char = {val: key for val, key in enumerate(char2int)}
 
 
