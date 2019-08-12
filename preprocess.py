@@ -171,3 +171,4 @@ def gen(data, batch_size=64, max_batch=-1, shuffle=True):
 # for key in feat2val.keys():
 #     print(key, feat2val[key])
 #     k += len(feat2val[key])
+# SIDA is a government agency working on behalf of the Swedish parliament and government, with the mission to reduce poverty in the world. SIDA is implementing InnCAB - Innovation Capacity Building programme within Addis Ababa University through the Office of University Industry Linkage and Technology Transfer, Addis Ababa University. The programme intends to mainstream entrepreneurship culture within the university. InnCAB-SIDA programme is supporting the AI in Ethiopia conference and also the launching of the Ethiopian’s in AI initiative.

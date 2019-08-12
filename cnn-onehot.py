@@ -69,9 +69,9 @@ class Encoder(tf.keras.Model):
     def call(self, w, f):
         x = self.cnn(w)
         x = self.pool(x)
-        x = self.flat(x)
+        state = self.flat(x)
         feat = self.fc1(f)
-        state = tf.concat([x, feat], axis=1)
+        #state = tf.concat([x, feat], axis=1)
         state = self.fc2(state)
         return state, feat
 
@@ -93,7 +93,7 @@ class Decoder(tf.keras.Model):
 
     def call(self, x, feat, hidden):
         # enc_output shape == (batch_size, max_length, hidden_size)
-        # x = tf.concat([context_vector, x, feat], axis=-1)
+        x = tf.concat([x, feat], axis=-1)
         x = tf.expand_dims(x, 1)
         output, state = self.gru(x, initial_state=hidden)
         output = tf.reshape(output, (-1, output.shape[2]))
@@ -177,7 +177,7 @@ def train_step(root, feature, dec_input, target):
 
 def test_model(test_data, log=False):
     test_n_batches, test_batch_size =  int(test_data[0].shape[0] / batch_size), batch_size  
-    print(test_n_batches * test_batch_size)
+    #print(test_n_batches * test_batch_size)
     test_gen = pre.gen(test_data, batch_size, shuffle=False)
     # shows sample examples and calculates accuracy
     test_batches = len(test_data[0]) // batch_size
@@ -230,9 +230,11 @@ for epoch in range(EPOCHS):
 #             print('Epoch {} Batch {} Loss {:.4f}'.format(epoch + 1,
 #                                                      step,
 #                                                      batch_loss.numpy()))
+
     clean_accuracy = test_model(clean_data)
     gen_accuracy = test_model(gen_data)
-    print('Epoch {} Loss {:.4f} Gen Accuracy {:.4f} Clean Accuracy {:.4f}'.format(epoch + 1,total_loss / n_batches, gen_accuracy, clean_accuracy))
+    elaps = time.time() - start
+    print('Epoch {} Loss {:.4f} Gen Accuracy {:.4f} Clean Accuracy {:.4f} Time {:.4f}'.format(epoch + 1,total_loss / n_batches, gen_accuracy, clean_accuracy, elaps))
     
 
 # In[ ]:
