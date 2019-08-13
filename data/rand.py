@@ -1,12 +1,15 @@
-<<<<<<< HEAD
-import random
+main_lines = open('wol-data/wolayitta_clean.txt').readlines()
+manul_lines = open('wol-data/manual.txt').readlines()
 
-lines = open('words.txt').readlines()
-random.shuffle(lines)
-=======
-import random
+d = {}
+for line in manul_lines:
+    word, root, feat = line[:-1].split()
+    d[word] = root
 
-lines = open('words.txt').readlines()
-random.shuffle(lines)
->>>>>>> 5bdcf056fb1926f8d3757ef8b0a4f25e990cc48d
-open('rwords.txt', mode='w').writelines(lines)
+k = 0
+for ml in main_lines:
+    word, root, feat= ml[:-1].split()
+    if word in d:
+        k += 1
+
+print(k, len(manul_lines))
