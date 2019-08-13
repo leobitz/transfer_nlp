@@ -83,7 +83,7 @@ def word_index_2_one_hot(indexes, max_len):
     return vecs
     
 
-def convert(char2int, feat2val, max_root_len, max_word_len, train_set=True, langs=None, for_cnn=False):
+def convert(char2int, feat2val, max_root_len, max_word_len, train_set=True, langs=None, for_cnn=False, data_size=-1):
     # print(feat2val)
     max_root_len = max_root_len + 2
     max_word_len = max_word_len + 2
@@ -95,7 +95,7 @@ def convert(char2int, feat2val, max_root_len, max_word_len, train_set=True, lang
             name = "data/sig/{0}-train.txt".format(lang)
         else:
             name = "data/sig/{0}-test.txt".format(lang)
-        lines = open(name, encoding='utf-8').readlines()
+        lines = open(name, encoding='utf-8').readlines()[:data_size]
         for line in lines:
             root, feat, word = line[:-1].split(' ')
             feat = feat.split(',')

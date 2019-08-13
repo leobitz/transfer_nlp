@@ -21,24 +21,29 @@ parser.add_argument("--char_embed_size", type=int,  default=32)
 parser.add_argument("--feat_embed_size", type=int, default=32)
 parser.add_argument("--hidden_size", type=int, default=265)
 parser.add_argument("--epochs", type=int, default=50)
-parser.add_argument("--file_name", type=str, default='wol-14')
+parser.add_argument("--file_name", type=str, default='wol')
+parser.add_argument("--data_size", type=int, default=14)
 args = parser.parse_args()
 
 
 # In[ ]:
 
+batch_size = args.batch_size
+train_batches = 1 + (args.data_size * 1000) // batch_size
+test_batches = 1 + int((((args.data_size * 1000) / 0.75) * 0.25) / batch_size)
+print("Train Size:", train_batches * batch_size, "Test Size:", test_batches * batch_size)
 
 char2int, feat2val, max_r, max_w = pre.process([args.file_name])
-data = pre.convert(char2int, feat2val, max_r, max_w, langs=[args.file_name], for_cnn=True)
-clean_data = pre.convert(char2int, feat2val, max_r, max_w, langs=['wol'], train_set=False, for_cnn=True)
-gen_data = pre.convert(char2int, feat2val, max_r, max_w, langs=[args.file_name], train_set=False, for_cnn=True)
+data = pre.convert(char2int, feat2val, max_r, max_w, langs=[args.file_name], for_cnn=True, data_size=(train_batches * batch_size))
+clean_data = pre.convert(char2int, feat2val, max_r, max_w, langs=['wol-clean'], train_set=False, for_cnn=True)
+gen_data = pre.convert(char2int, feat2val, max_r, max_w, langs=[args.file_name], train_set=False, for_cnn=True, data_size=(test_batches * batch_size))
 int2char = {val: key for val, key in enumerate(char2int)}
 
 
 # In[ ]:
 
 
-batch_size = args.batch_size
+
 max_root = max_r + 2
 max_word = max_w + 2
 n_feature = data[1].shape[1]
