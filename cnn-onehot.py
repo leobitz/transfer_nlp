@@ -3,9 +3,13 @@
 
 # In[1]:
 
-
-import tensorflow as tf
+import random
+random.seed(8080)
 import numpy as np
+np.random.seed(8080)
+import tensorflow as tf
+tf.random.set_seed(8080)
+
 from data_gen import *
 import time
 import preprocess as pre
