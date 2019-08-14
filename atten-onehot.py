@@ -2,19 +2,16 @@
 # coding: utf-8
 
 # In[1]:
-
-
+import argparse
+import preprocess as pre
+import time
+from data_gen import *
+import tensorflow as tf
+import numpy as np
 import random
 random.seed(8080)
-import numpy as np
 np.random.seed(8080)
-import tensorflow as tf
 tf.random.set_seed(8080)
-
-from data_gen import *
-import time
-import preprocess as pre
-import argparse
 
 
 # In[2]:
@@ -36,17 +33,21 @@ args = parser.parse_args()
 batch_size = args.batch_size
 train_batches = 1 + (args.data_size * 1000) // batch_size
 test_batches = 1 + int((((args.data_size * 1000) / 0.75) * 0.25) / batch_size)
-print("Train Size:", train_batches * batch_size, "Test Size:", test_batches * batch_size)
+print("Train Size:", train_batches * batch_size,
+      "Test Size:", test_batches * batch_size)
 
 char2int, feat2val, max_r, max_w = pre.process([args.file_name])
-data = pre.convert(char2int, feat2val, max_r, max_w, langs=[args.file_name], for_cnn=True, data_size=(train_batches * batch_size))
-clean_data = pre.convert(char2int, feat2val, max_r, max_w, langs=['wol-clean'], train_set=False, for_cnn=True)
-gen_data = pre.convert(char2int, feat2val, max_r, max_w, langs=[args.file_name], train_set=False, for_cnn=True, data_size=(test_batches * batch_size))
+data = pre.convert(char2int, feat2val, max_r, max_w, langs=[
+                   args.file_name], for_cnn=True, data_size=(train_batches * batch_size))
+print(len(data))
+clean_data = pre.convert(char2int, feat2val, max_r, max_w, langs=[
+                         'wol-clean'], train_set=False, for_cnn=True)
+gen_data = pre.convert(char2int, feat2val, max_r, max_w, langs=[
+                       args.file_name], train_set=False, for_cnn=True, data_size=(test_batches * batch_size))
 int2char = {val: key for val, key in enumerate(char2int)}
 
 
 # In[ ]:
-
 
 
 max_root = max_r + 2
@@ -72,9 +73,11 @@ class Encoder(tf.keras.Model):
                                        return_sequences=True,
                                        return_state=True,
                                        recurrent_initializer='glorot_uniform', name="encoder_gru")
-        self.fc1 = tf.keras.layers.Dense(feat_units, activation="relu", name="feature_output")
-        self.fc2 = tf.keras.layers.Dense(enc_units, activation="relu", name="state_out")
-        
+        self.fc1 = tf.keras.layers.Dense(
+            feat_units, activation="relu", name="feature_output")
+        self.fc2 = tf.keras.layers.Dense(
+            enc_units, activation="relu", name="state_out")
+
     def call(self, w, f, hidden):
         output, state = self.gru(w, initial_state=hidden)
         feat = self.fc1(f)
@@ -144,7 +147,7 @@ class Decoder(tf.keras.Model):
         output = tf.reshape(output, (-1, output.shape[2]))
 
         x = self.fc(output)
-        return x, state#, attention_weights
+        return x, state  # , attention_weights
 
 
 # In[ ]:
@@ -155,16 +158,17 @@ def predict(encoder, decoder, inputs, n_steps):
     root, feat = inputs[0], inputs[1]
     enc_hidden = encoder.initialize_hidden_state()
     enc_output, state, feat = encoder(inputs[0], inputs[1], enc_hidden)
-    
+
     start_word = '<'
     start_mat = pre.word_to_matrix(start_word, char2int, 1, ' ')
-    
-    target_seq = np.zeros((root.shape[0], len(char2int)), dtype=np.float32) + np.array(start_mat, dtype=np.float32)
+
+    target_seq = np.zeros((root.shape[0], len(
+        char2int)), dtype=np.float32) + np.array(start_mat, dtype=np.float32)
     outputs = list()
     for t in range(n_steps):
         # predict next char
         target_seq, state = decoder(target_seq, state, enc_output, feat)
-        
+
         outputs.append(target_seq)
     return np.stack(outputs)
 
@@ -182,6 +186,7 @@ encoder = Encoder(hidden_size, feat_embed_size, batch_size)
 optimizer = tf.keras.optimizers.Adam()
 loss_object = tf.keras.losses.CategoricalCrossentropy()
 
+
 def loss_function(real, pred):
     loss_ = loss_object(real, pred)
 
@@ -194,14 +199,15 @@ def loss_function(real, pred):
 @tf.function
 def train_step(root, feature, dec_input, target, enc_hidden):
     loss = 0
-    
+
     with tf.GradientTape() as tape:
         enc_output, enc_hidden, feat = encoder(root, feature, enc_hidden)
 
         dec_hidden = enc_hidden
 
         for t in range(target.shape[1]):
-            predictions, dec_hidden = decoder(dec_input[:, t], dec_hidden, enc_output, feat)
+            predictions, dec_hidden = decoder(
+                dec_input[:, t], dec_hidden, enc_output, feat)
             loss += loss_function(target[:, t], predictions)
 
         batch_loss = (loss / int(target.shape[1]))
@@ -217,31 +223,30 @@ def train_step(root, feature, dec_input, target, enc_hidden):
 
 
 def test_model(test_data):
-    test_n_batches, test_batch_size =  int(test_data[0].shape[0] / batch_size), batch_size  
+    test_n_batches, test_batch_size = int(
+        test_data[0].shape[0] / batch_size), batch_size
     # print(test_n_batches * test_batch_size)
     test_gen = pre.gen(test_data, batch_size, shuffle=False)
     # shows sample examples and calculates accuracy
     test_batches = len(test_data[0]) // batch_size
-    total, correct = 0, 0
-    in_word = 0
-    sims = []
-    for b in range(test_batches - 1):
+    total, correct = len(test_data[0]), 0
+    for b in range(test_batches):
         # get data from test data generator
         [root, feat, dec_in], y = next(test_gen)
         pred = predict(encoder, decoder, [root, feat], max_word)
+        # print(pred.shape)
         for k in range(pred.shape[1]):
-            indexes = pred[:, k]#.argmax(axis=1)
+            indexes = pred[:, k]  # .argmax(axis=1)
             r = ''.join(pre.matrix_to_word(root[k], int2char)).strip()[1:-1]
             w = ''.join(pre.matrix_to_word(dec_in[k], int2char)).strip()[1:-1]
             t = ''.join(pre.matrix_to_word(indexes, int2char)).strip()[:-1]
             if w == t:
                 correct += 1
-    #         else:
-    #             print(r, w, t)
+            # else:
+            #     print(r, w, t)
 
-
-        total += batch_size
-        return float(correct)/float(total)*100.0
+        # total += batch_size
+    return float(correct)*100/float(total)
 
 
 # In[ ]:
@@ -270,13 +275,9 @@ for epoch in range(EPOCHS):
 #                                                      batch_loss.numpy()))
     elaps = time.time() - start
     clean_accuracy = test_model(clean_data)
-    gen_accuracy = test_model(gen_data)
-    print('Epoch {} Loss {:.4f} Gen Accuracy {:.4f} Clean Accuracy {:.4f} Time {:.4f}'.format(epoch + 1,total_loss / n_batches, gen_accuracy, clean_accuracy, elaps))
-    
+    gen_accuracy =  test_model(gen_data)
+    print('Epoch {0} Loss {1:.4f} Gen Accuracy {2:.4f} Clean Accuracy {3:.4f} Time {4:.4f}'.format(
+        epoch + 1, total_loss / n_batches, gen_accuracy, clean_accuracy, elaps))
 
 
 # In[ ]:
-
-
-
-
