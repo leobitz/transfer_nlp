@@ -24,7 +24,7 @@ do
                         echo "File Exists"
                     else
                         echo $output_file
-                        python atten-onehot.py --epochs 80 --batch_size 128 --hidden_size $hidden_size --feat_embed_size $feat_embed_size --char_embed_size $char_embed_size --file_name $file >> $output_file
+                        python atten-onehot.py --epochs 80 --batch_size 128 --hidden_size $hidden_size --feat_embed_size $feat_embed_size --char_embed_size $char_embed_size --file_name wol-$file >> $output_file
                     fi
                 done
             done

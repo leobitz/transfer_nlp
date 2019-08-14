@@ -39,7 +39,6 @@ print("Train Size:", train_batches * batch_size,
 char2int, feat2val, max_r, max_w = pre.process([args.file_name])
 data = pre.convert(char2int, feat2val, max_r, max_w, langs=[
                    args.file_name], for_cnn=True, data_size=(train_batches * batch_size))
-print(len(data))
 clean_data = pre.convert(char2int, feat2val, max_r, max_w, langs=[
                          'wol-clean'], train_set=False, for_cnn=True)
 gen_data = pre.convert(char2int, feat2val, max_r, max_w, langs=[
@@ -269,10 +268,7 @@ for epoch in range(EPOCHS):
         batch_loss = train_step(root, feat, dec_in, y, enc_hidden)
         total_loss += batch_loss
 
-#         if step % (n_batches // 1) == 0:
-#             print('Epoch {} Batch {} Loss {:.4f}'.format(epoch + 1,
-#                                                      step,
-#                                                      batch_loss.numpy()))
+
     elaps = time.time() - start
     clean_accuracy = test_model(clean_data)
     gen_accuracy =  test_model(gen_data)

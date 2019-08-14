@@ -116,7 +116,8 @@ def convert(char2int, feat2val, max_root_len, max_word_len, train_set=True, lang
             for i in range(data_size):
                 lines.append(file.readline())
 
-        for line in lines:
+        for i, line in enumerate(lines):
+        
             root, feat, word = line[:-1].split(' ')
             feat = feat.split(',')
             current_feats = {}
@@ -160,7 +161,7 @@ def convert(char2int, feat2val, max_root_len, max_word_len, train_set=True, lang
     else:
         root_data = np.array(root_data, dtype=np.int32)
         in_data = np.array(in_data, dtype=np.int32)
-
+    
     feat_data = np.array(feat_data, dtype=np.float32)
     out_data = np.array(out_data, dtype=np.float32)
     return root_data, feat_data, in_data, out_data

@@ -2,18 +2,16 @@
 # coding: utf-8
 
 # In[1]:
-
+import argparse
+import preprocess as pre
+import time
+from data_gen import *
+import tensorflow as tf
+import numpy as np
 import random
 random.seed(8080)
-import numpy as np
 np.random.seed(8080)
-import tensorflow as tf
 tf.random.set_seed(8080)
-
-from data_gen import *
-import time
-import preprocess as pre
-import argparse
 
 
 # In[2]:
@@ -22,28 +20,39 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("--batch_size", type=int,  default=128)
 parser.add_argument("--char_embed_size", type=int,  default=32)
-parser.add_argument("--feat_embed_size", type=int, default=16)
+parser.add_argument("--feat_embed_size", type=int, default=32)
 parser.add_argument("--hidden_size", type=int, default=265)
 parser.add_argument("--epochs", type=int, default=50)
-parser.add_argument("--file_name", type=str, default='wol-14')
+parser.add_argument("--file_name", type=str, default='wol')
+parser.add_argument("--data_size", type=int, default=14)
 args = parser.parse_args()
 
+
+# In[ ]:
+
+batch_size = args.batch_size
+train_batches = 1 + (args.data_size * 1000) // batch_size
+test_batches = 1 + int((((args.data_size * 1000) / 0.75) * 0.25) / batch_size)
+print("Train Size:", train_batches * batch_size,
+      "Test Size:", test_batches * batch_size)
 
 # In[ ]:
 
 
 char2int, feat2val, max_r, max_w = pre.process([args.file_name])
 # print(feat2val)
-data = pre.convert(char2int, feat2val, max_r, max_w, langs=[args.file_name], for_cnn=True)
-clean_data = pre.convert(char2int, feat2val, max_r, max_w, langs=['wol'], train_set=False, for_cnn=True)
-gen_data = pre.convert(char2int, feat2val, max_r, max_w, langs=[args.file_name], train_set=False, for_cnn=True)
+data = pre.convert(char2int, feat2val, max_r, max_w, 
+langs=[args.file_name], for_cnn=True, data_size=(train_batches * batch_size))
+clean_data = pre.convert(char2int, feat2val, max_r, max_w, 
+langs=['wol-clean'], train_set=False, for_cnn=True)
+gen_data = pre.convert(char2int, feat2val, max_r, max_w, langs=[args.file_name], 
+train_set=False, for_cnn=True, data_size=(train_batches * batch_size))
 int2char = {val: key for val, key in enumerate(char2int)}
 
 
 # In[ ]:
 
 
-batch_size = args.batch_size
 max_root = max_r + 2
 max_word = max_w + 2
 n_feature = data[1].shape[1]
@@ -185,10 +194,10 @@ def test_model(test_data, log=False):
     test_gen = pre.gen(test_data, batch_size, shuffle=False)
     # shows sample examples and calculates accuracy
     test_batches = len(test_data[0]) // batch_size
-    total, correct = 0, 0
+    total, correct = len(test_data[0]), 0
     in_word = 0
     sims = []
-    for b in range(test_batches - 1):
+    for b in range(test_batches):
         # get data from test data generator
         [root, feat, dec_in], y = next(test_gen)
         root = np.expand_dims(root, axis=3)
@@ -200,13 +209,12 @@ def test_model(test_data, log=False):
             t = ''.join(pre.matrix_to_word(indexes, int2char)).strip()[:-1]
             if w == t:
                 correct += 1
-            else:
-                if log:
-                    print(r, w, t)
+            # else:
+            #     if log:
+            #         print(r, w, t)
 
 
-        total += batch_size
-        return float(correct)/float(total)*100.0
+    return float(correct)*100/float(total)
 
 
 # In[ ]:
@@ -229,11 +237,6 @@ for epoch in range(EPOCHS):
         root = np.expand_dims(root, axis=3)
         batch_loss = train_step(root, feat, dec_in, y)
         total_loss += batch_loss
-
-#         if step % (n_batches // 1) == 0:
-#             print('Epoch {} Batch {} Loss {:.4f}'.format(epoch + 1,
-#                                                      step,
-#                                                      batch_loss.numpy()))
 
     clean_accuracy = test_model(clean_data)
     gen_accuracy = test_model(gen_data)
