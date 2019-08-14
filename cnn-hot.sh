@@ -14,7 +14,7 @@ do
     #do
         for feat_embed_size in 8 16 32 64
         do
-            for file in 14 29 44
+            for data_size in 14 29 44
             do
                 for take in 1 2 3 4 5
                 do
@@ -23,7 +23,7 @@ do
                     then
                         echo "File Exists"
                     else
-                        python cnn-onehot.py --epochs 80 --batch_size 128 --hidden_size $hidden_size --feat_embed_size $feat_embed_size --file_name wol-$file >> $output_file
+                        python cnn-onehot.py --epochs 80 --batch_size 128 --hidden_size $hidden_size --feat_embed_size $feat_embed_size --data_size $data_size >> $output_file
                     fi
                 done
             done
