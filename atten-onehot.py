@@ -33,8 +33,8 @@ args = parser.parse_args()
 batch_size = args.batch_size
 train_batches = 1 + (args.data_size * 1000) // batch_size
 test_batches = 1 + int((((args.data_size * 1000) / 0.75) * 0.25) / batch_size)
-print("Train Size:", train_batches * batch_size,
-      "Test Size:", test_batches * batch_size)
+# print("Train Size:", train_batches * batch_size,
+#       "Test Size:", test_batches * batch_size)
 
 char2int, feat2val, max_r, max_w = pre.process([args.file_name])
 data = pre.convert(char2int, feat2val, max_r, max_w, langs=[
