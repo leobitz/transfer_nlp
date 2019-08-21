@@ -2,16 +2,17 @@
 # coding: utf-8
 
 # In[1]:
+import random
+random.seed(8080)
+import numpy as np
+np.random.seed(8080)
+import tensorflow as tf
+tf.random.set_seed(8080)
+# In[1]:
 import argparse
 import preprocess as pre
 import time
 from data_gen import *
-import tensorflow as tf
-import numpy as np
-import random
-random.seed(8080)
-np.random.seed(8080)
-tf.random.set_seed(8080)
 
 
 # In[2]:
@@ -245,7 +246,6 @@ for epoch in range(EPOCHS):
     
 
 # In[ ]:
-
 
 
 

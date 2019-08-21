@@ -18,7 +18,7 @@ do
             do
                 for take in 1 2 3 4 5
                 do
-                    output_file="data/results/$hidden_size-$feat_embed_size-$char_embed_size-$file-$take.txt"
+                    output_file="data/results/$hidden_size-$feat_embed_size-$char_embed_size-$data_size-$take.txt"
                     if [ -e $output_file ]
                     then
                         echo "File Exists"
