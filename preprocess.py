@@ -180,6 +180,7 @@ def get_lines(train_set=True, langs=None, data_size=-1):
             name = "data/sig/{0}-test.txt".format(lang)
         file = open(name, encoding='utf-8')
 
+        lines = []
         if data_size < 0:
             lines = file.readlines()
         else:
@@ -286,8 +287,8 @@ def gen_batched(lines, char2int, feat2val, max_root_len, max_word_len, batch_siz
         yield [batch_root, batch_feat, batch_in], batch_out
 
 
-# char2int, feat2val, max_r, max_w = process()
-# lines = get_lines(train_set=True)
+# char2int, feat2val, max_r, max_w = process(['wol'])
+# lines = get_lines(train_set=False,langs=['wol-clean'])
 # gen = gen_batched(lines, char2int, feat2val, max_r, max_w, batch_size=64, cnn=True)
 # x = next(gen)
 # print(x[0][0].shape)
