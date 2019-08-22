@@ -117,7 +117,7 @@ def convert(char2int, feat2val, max_root_len, max_word_len, train_set=True, lang
                 lines.append(file.readline())
 
         for i, line in enumerate(lines):
-        
+
             root, feat, word = line[:-1].split(' ')
             feat = feat.split(',')
             current_feats = {}
@@ -161,7 +161,83 @@ def convert(char2int, feat2val, max_root_len, max_word_len, train_set=True, lang
     else:
         root_data = np.array(root_data, dtype=np.int32)
         in_data = np.array(in_data, dtype=np.int32)
-    
+
+    feat_data = np.array(feat_data, dtype=np.float32)
+    out_data = np.array(out_data, dtype=np.float32)
+    return root_data, feat_data, in_data, out_data
+
+
+def get_lines(train_set=True, langs=None, data_size=-1):
+    if langs is None:
+        langs = ["arabic", "finnish", "georgian", "german",
+                 "hungarian", "navajo", "russian", "spanish", "turkish"]
+
+    data = []
+    for lang in langs:
+        if train_set == True:
+            name = "data/sig/{0}-train.txt".format(lang)
+        else:
+            name = "data/sig/{0}-test.txt".format(lang)
+        file = open(name, encoding='utf-8')
+
+        if data_size < 0:
+            lines = file.readlines()
+        else:
+            for i in range(data_size):
+                lines.append(file.readline())
+        data.extend(lines)
+    return data
+
+
+def lines_2_inputs(lines, char2int, feat2val, max_root_len, max_word_len, for_cnn=False):
+    max_root_len = max_root_len + 2
+    max_word_len = max_word_len + 2
+    root_data, feat_data, in_data, out_data = [], [], [], []
+    for i, line in enumerate(lines):
+        root, feat, word = line[:-1].split(' ')
+        feat = feat.split(',')
+        current_feats = {}
+        feat_vecs = []
+        # print(feat)
+        for ft in feat:
+            key, val = ft.split('=')
+            current_feats[key] = val
+        # current_feats['lang'] = lang
+
+        for ft in feat2val:
+            if ft in current_feats:
+                feat_vecs += feat_to_vec(ft, current_feats[ft], feat2val)
+            else:
+                vec = [0]*(len(feat2val[ft]) + 1)
+                vec[-1] = 1
+                feat_vecs += vec
+
+        if for_cnn:
+            root_vec = word_to_matrix(
+                '<' + root + '>', char2int, max_root_len, ' ')
+            word_vec_in = word_to_matrix(
+                '<' + word + '>', char2int, max_word_len, ' ')
+        else:
+            root_vec = word_to_index(
+                '<' + root + '>', char2int, max_root_len, ' ')
+            word_vec_in = word_to_index(
+                '<' + word + '>', char2int, max_word_len, ' ')
+
+        word_vec_out = word_to_index(
+            word + "> ", char2int, max_word_len, ' ')
+        output = word_index_2_one_hot(word_vec_out, len(char2int))
+        root_data.append(root_vec)
+        feat_data.append(feat_vecs)
+        in_data.append(word_vec_in)
+        out_data.append(output)
+
+    if for_cnn:
+        root_data = np.array(root_data, dtype=np.float32)
+        in_data = np.array(in_data, dtype=np.float32)
+    else:
+        root_data = np.array(root_data, dtype=np.int32)
+        in_data = np.array(in_data, dtype=np.int32)
+
     feat_data = np.array(feat_data, dtype=np.float32)
     out_data = np.array(out_data, dtype=np.float32)
     return root_data, feat_data, in_data, out_data
@@ -190,6 +266,31 @@ def gen(data, batch_size=64, max_batch=-1, shuffle=True):
         yield [batch_root, batch_feat, batch_in], batch_out
 
 
+def gen_batched(lines, char2int, feat2val, max_root_len, max_word_len, batch_size=64, max_batch=-1, shuffle=True, cnn=False):
+    current = 0
+    max_batch = len(lines) // batch_size
+    max_train = max_batch * batch_size
+    if shuffle:
+        np.random.shuffle(lines)
+    while True:
+        batch_lines = lines[current: current + batch_size]
+        batch_root, batch_feat, batch_in, batch_out = lines_2_inputs(
+            batch_lines, char2int, feat2val, max_root_len, max_word_len, for_cnn=cnn)
+        current += batch_size
+
+        if current >= max_train:
+            if shuffle:
+                np.random.shuffle(lines)
+            current = 0
+
+        yield [batch_root, batch_feat, batch_in], batch_out
+
+
+# char2int, feat2val, max_r, max_w = process()
+# lines = get_lines(train_set=True)
+# gen = gen_batched(lines, char2int, feat2val, max_r, max_w, batch_size=64, cnn=True)
+# x = next(gen)
+# print(x[0][0].shape)
 # print(data[0].shape, data[1].shape, data[2].shape, data[3].shape)
 # print(word_to_index("leo", char2int, 6, ' '))
 # print(feat_to_vec('poss', 'PSS2P', feat2val))
