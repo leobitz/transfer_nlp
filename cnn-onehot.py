@@ -2,10 +2,13 @@
 # coding: utf-8
 
 # In[1]:
+
 import random
 random.seed(8080)
 import numpy as np
 np.random.seed(8080)
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 tf.random.set_seed(8080)
 
