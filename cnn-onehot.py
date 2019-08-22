@@ -2,16 +2,20 @@
 # coding: utf-8
 
 # In[1]:
+import random
+random.seed(8080)
+import numpy as np
+np.random.seed(8080)
+import tensorflow as tf
+tf.random.set_seed(8080)
+
 from data_gen import *
 import time
 import preprocess as pre
 import argparse
-import tensorflow as tf
-import numpy as np
-import random
-random.seed(8080)
-np.random.seed(8080)
-tf.random.set_seed(8080)
+
+
+
 # In[1]:
 
 
@@ -52,9 +56,9 @@ train_lines = pre.get_lines(train_set=True, langs=[
                             args.file_name], data_size=(train_batches * batch_size))
 # print(len(train_lines))
 gen_test_lines = pre.get_lines(train_set=False, langs=[
-                               args.file_name], data_size=(train_batches * batch_size))
+                               args.file_name], data_size=(test_batches * batch_size))
 clean_test_lines = pre.get_lines(
-    train_set=False, langs=['wol-clean'], data_size=(train_batches * batch_size))
+    train_set=False, langs=['wol-clean'])
 
 train_gen = pre.gen_batched(
     train_lines, char2int, feat2val, max_r, max_w, batch_size=batch_size, cnn=True)
@@ -242,7 +246,6 @@ def test_model(gen, data_size, log=False):
 
 # In[ ]:
 
-
 for epoch in range(EPOCHS):
     start = time.time()
 
@@ -265,7 +268,7 @@ for epoch in range(EPOCHS):
     gen_accuracy = test_model(gen_test_gen, data_size=len(gen_test_lines))
     elaps = time.time() - start
     print('Epoch {} Loss {:.4f} Gen Accuracy {:.4f} Clean Accuracy {:.4f} Time {:.4f}'.format(
-        epoch + 1, total_loss / n_batches, gen_accuracy, 0, elaps))
+        epoch + 1, total_loss / n_batches, gen_accuracy, clean_accuracy, elaps))
 
 
 # In[ ]:

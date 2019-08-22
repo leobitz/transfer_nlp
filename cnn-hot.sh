@@ -23,7 +23,7 @@ do
                     then
                         echo "File Exists"
                     else
-                        python cnn-onehot.py --epochs 80 --batch_size 128 --hidden_size $hidden_size --feat_embed_size $feat_embed_size --data_size $data_size >&1 | tee  $output_file
+                        python cnn-onehot.py --epochs 80 --batch_size 128 --hidden_size $hidden_size --feat_embed_size $feat_embed_size --data_size $data_size >  $output_file
                     fi
                 done
             done
