@@ -8,23 +8,25 @@ alias tf="conda activate tf2"
 # source /home/leo/.bashrc
 # cd /home/leo/projects/amharic_word_embedding/data
 
-for hidden_size in 256
+for hidden_size in 256 512
 do
     for char_embed_size in 32
     do
-        for feat_embed_size in 8 16 32 
+        for feat_embed_size in 8 16 32 64
         do
-            for data_size in 14 29 44
+            for data_size in 14 44
             do
-                for take in 1 2 3 4 5
+                for take in  1 2 3 4 5
                 do
-                    output_file="data/results/$hidden_size-$feat_embed_size-$char_embed_size-$data_size-$take.txt"
+                    output_file="data/results/lstm-atten-$hidden_size-$feat_embed_size-$char_embed_size-$data_size-$take.txt"
+                    find  ./data/results -type f -size 0 -delete
                     if [ -e $output_file ]
                     then
                         echo "File Exists"
                     else
                         echo $output_file
-                        python atten-onehot.py --epochs 80 --batch_size 128 --hidden_size $hidden_size --feat_embed_size $feat_embed_size --char_embed_size $char_embed_size --data_size $data_size >> $output_file
+                        python lstm-atten-onehot.py --epochs 80 --batch_size 128 --hidden_size $hidden_size --feat_embed_size $feat_embed_size --char_embed_size $char_embed_size --data_size $data_size >> $output_file
+                        #python atten-onehot.py --epochs 80 --batch_size 128 --hidden_size $hidden_size --feat_embed_size $feat_embed_size --char_embed_size $char_embed_size --data_size $data_size >> $output_file
                     fi
                 done
             done

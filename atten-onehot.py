@@ -1,17 +1,19 @@
 #!/usr/bin/env python
 # coding: utf-8
-seed = 12121
+seed = 12122
 import random
 random.seed(seed)
 import numpy as np
 np.random.seed(seed)
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 tf.random.set_seed(seed)
-# In[1]:
-import argparse
-import preprocess as pre
-import time
+
 from data_gen import *
+import time
+import preprocess as pre
+import argparse
 
 
 # In[2]:
