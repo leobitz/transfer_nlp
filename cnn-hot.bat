@@ -1,7 +1,7 @@
 @ECHO OFF
 for %%h in (256 512) do (
 	for %%c in (32) do (
-		for %%f in (16 32 64) do (
+		for %%f in (16 64) do (
 			for %%d in (14 44 ) do (
 				for %%t in (1 2 3 4 5) do (
 					if exist "data\results\lstm-atten-%%h-%%f-%%c-%%d-%%t.txt" (
