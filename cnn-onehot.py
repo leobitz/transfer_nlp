@@ -35,6 +35,10 @@ parser.add_argument("--hidden_size", type=int, default=265)
 parser.add_argument("--epochs", type=int, default=50)
 parser.add_argument("--file_name", type=str, default='wol')
 parser.add_argument("--data_size", type=int, default=14)
+parser.add_argument("--kernel_size", type=int, default=5)
+parser.add_argument("--kernels", type=int, default=32)
+parser.add_argument("--pool_size", type=int, default=2)
+# parser.add_argument("--data_size", type=int, default=14)
 args = parser.parse_args()
 
 
@@ -95,8 +99,8 @@ class Encoder(tf.keras.Model):
         self.batch_size = batch_size
         self.enc_units = enc_units
         self.cnn = tf.keras.layers.Conv2D(
-            32, (3, 3), padding="same", activation="relu")
-        self.pool = tf.keras.layers.MaxPool2D(2, 2)
+            args.kernels, (args.kernel_size, args.kernel_size), padding="same", activation="relu")
+        self.pool = tf.keras.layers.MaxPool2D(args.pool_size, args.pool_size)
         self.flat = tf.keras.layers.Flatten()
 
         self.fc1 = tf.keras.layers.Dense(

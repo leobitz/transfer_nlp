@@ -125,7 +125,7 @@ class Decoder(tf.keras.Model):
         super(Decoder, self).__init__()
         self.batch_size = batch_size
         self.dec_units = dec_units
-        self.gru = tf.keras.layers.LSTM(self.dec_units,
+        self.gru = tf.keras.layers.CuDNNLSTM(self.dec_units,
                                        return_sequences=True,
                                        return_state=True,
                                        recurrent_initializer='glorot_uniform')
