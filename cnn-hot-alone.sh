@@ -2,15 +2,13 @@ export LD_LIBRARY_PATH="/usr/local/cuda-10.0/lib64:/usr/local/cuda-10.0/bin:$LD_
 export PATH="/usr/local/cuda-10.0/bin:$PATH"
 alias tf="conda activate tf2"
 
-# export PATH=$PATH:/home/leo/projects/amharic_word_embedding/data/fastText/build
-# export PATH=$PATH:/home/leo/projects/amharic_word_embedding/word2vec
+source /home/leo/.bashrc
 
-# source /home/leo/.bashrc
-# cd /home/leo/projects/amharic_word_embedding/data
+# ~/anaconda3/envs/tf2/bin/python cnn-onehot.py
 
-for hidden_size in 256 512
+for hidden_size in 256 #512
 do
-    for kernels in 24 32 48 64
+    for kernels in 24 32 
     do
         for feat_embed_size in 16 64
         do
@@ -29,7 +27,7 @@ do
                                 echo "File Exists"
                             else
                                 echo $output_file
-                                python cnn-onehot.py --epochs 80 --batch_size 128 --kernel_size $kernel_size --pool_size $pool_size --kernels $kernels --hidden_size $hidden_size --feat_embed_size $feat_embed_size --data_size $data_size >  $output_file 
+                                ~/anaconda3/envs/tf2/bin/python cnn-onehot.py --epochs 80 --batch_size 128 --kernel_size $kernel_size --pool_size $pool_size --kernels $kernels --hidden_size $hidden_size --feat_embed_size $feat_embed_size --data_size $data_size >  $output_file 
                                             
                             fi
                         done

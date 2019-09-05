@@ -1,0 +1,1 @@
+sh cnn-hot-alone.sh
