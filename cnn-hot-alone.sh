@@ -20,14 +20,14 @@ do
                     do
                         for take in 1 2 3 4 5
                         do
-                            output_file="data/results/cnn-$hidden_size-$feat_embed_size-$data_size-$kernels-$kernel_size-$pool_size-$take.txt"
-                            find  ./data/results -type f -size 0 -delete
+                            output_file="/home/leo/projects/transfer_nlp/data/results/cnn-$hidden_size-$feat_embed_size-$data_size-$kernels-$kernel_size-$pool_size-$take.txt"
+                            find  /home/leo/projects/transfer_nlp/data/results -type f -size 0 -delete
                             if [ -e $output_file ]
                             then
                                 echo "File Exists"
                             else
                                 echo $output_file
-                                ~/anaconda3/envs/tf2/bin/python cnn-onehot.py --epochs 80 --batch_size 128 --kernel_size $kernel_size --pool_size $pool_size --kernels $kernels --hidden_size $hidden_size --feat_embed_size $feat_embed_size --data_size $data_size >  $output_file 
+                                ~/anaconda3/envs/tf2/bin/python /home/leo/projects/transfer_nlp/cnn-onehot.py --epochs 80 --batch_size 128 --kernel_size $kernel_size --pool_size $pool_size --kernels $kernels --hidden_size $hidden_size --feat_embed_size $feat_embed_size --data_size $data_size >  $output_file 
                                             
                             fi
                         done

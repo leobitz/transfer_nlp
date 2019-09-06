@@ -2,7 +2,7 @@
 import numpy as np
 
 
-def process(langs=None):
+def process(langs=None, path="/home/leo/projects/transfer_nlp/"):
     chars = {}
     feats = {"lang": []}
     max_root, max_word = 0, 0
@@ -12,7 +12,7 @@ def process(langs=None):
 
     for lang in langs:
         feats['lang'].append(lang)
-        lines = open("data/sig/{0}-train.txt".format(lang),
+        lines = open(path + "data/sig/{0}-train.txt".format(lang),
                      encoding='utf-8').readlines()
         for line in lines:
             root, feat, word = line[:-1].split(' ')
@@ -94,7 +94,8 @@ def word_index_2_one_hot(indexes, max_len):
     return vecs
 
 
-def convert(char2int, feat2val, max_root_len, max_word_len, train_set=True, langs=None, for_cnn=False, data_size=-1):
+def convert(char2int, feat2val, max_root_len, max_word_len, train_set=True, 
+langs=None, for_cnn=False, data_size=-1,  path="/home/leo/projects/transfer_nlp/"):
     # print(feat2val)
     max_root_len = max_root_len + 2
     max_word_len = max_word_len + 2
@@ -104,9 +105,9 @@ def convert(char2int, feat2val, max_root_len, max_word_len, train_set=True, lang
     root_data, feat_data, in_data, out_data = [], [], [], []
     for lang in langs:
         if train_set == True:
-            name = "data/sig/{0}-train.txt".format(lang)
+            name = path + "data/sig/{0}-train.txt".format(lang)
         else:
-            name = "data/sig/{0}-test.txt".format(lang)
+            name = path + "data/sig/{0}-test.txt".format(lang)
         file = open(name, encoding='utf-8')
         lines = []
 
@@ -167,7 +168,7 @@ def convert(char2int, feat2val, max_root_len, max_word_len, train_set=True, lang
     return root_data, feat_data, in_data, out_data
 
 
-def get_lines(train_set=True, langs=None, data_size=-1):
+def get_lines(train_set=True, langs=None, data_size=-1,  path="/home/leo/projects/transfer_nlp/"):
     if langs is None:
         langs = ["arabic", "finnish", "georgian", "german",
                  "hungarian", "navajo", "russian", "spanish", "turkish"]
@@ -175,9 +176,9 @@ def get_lines(train_set=True, langs=None, data_size=-1):
     data = []
     for lang in langs:
         if train_set == True:
-            name = "data/sig/{0}-train.txt".format(lang)
+            name =path +   "data/sig/{0}-train.txt".format(lang)
         else:
-            name = "data/sig/{0}-test.txt".format(lang)
+            name =path + "data/sig/{0}-test.txt".format(lang)
         file = open(name, encoding='utf-8')
 
         lines = []
