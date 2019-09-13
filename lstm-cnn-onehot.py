@@ -35,10 +35,6 @@ parser.add_argument("--hidden_size", type=int, default=265)
 parser.add_argument("--epochs", type=int, default=50)
 parser.add_argument("--file_name", type=str, default='wol')
 parser.add_argument("--data_size", type=int, default=14)
-parser.add_argument("--kernel_size", type=int, default=5)
-parser.add_argument("--kernels", type=int, default=32)
-parser.add_argument("--pool_size", type=int, default=2)
-# parser.add_argument("--data_size", type=int, default=14)
 args = parser.parse_args()
 
 
@@ -99,14 +95,16 @@ class Encoder(tf.keras.Model):
         self.batch_size = batch_size
         self.enc_units = enc_units
         self.cnn = tf.keras.layers.Conv2D(
-            args.kernels, (args.kernel_size, args.kernel_size), padding="same", activation="relu")
-        self.pool = tf.keras.layers.MaxPool2D(args.pool_size, args.pool_size)
+            32, (3, 3), padding="same", activation="relu")
+        self.pool = tf.keras.layers.MaxPool2D(2, 2)
         self.flat = tf.keras.layers.Flatten()
 
         self.fc1 = tf.keras.layers.Dense(
             feat_units, activation="relu", name="feature_output")
         self.fc2 = tf.keras.layers.Dense(
-            enc_units, activation="relu", name="state_out")
+            enc_units, activation="relu", name="h_state_out")
+        self.fc3 = tf.keras.layers.Dense(
+            enc_units, activation="relu", name="c_state_out")
 
     def call(self, w, f):
         x = self.cnn(w)
@@ -114,8 +112,9 @@ class Encoder(tf.keras.Model):
         state = self.flat(x)
         feat = self.fc1(f)
         #state = tf.concat([x, feat], axis=1)
-        state = self.fc2(state)
-        return state, feat
+        state_h = self.fc2(state)
+        state_c = self.fc3(state)
+        return [state_h, state_c], feat
 
 
 # In[ ]:
@@ -126,21 +125,21 @@ class Decoder(tf.keras.Model):
         super(Decoder, self).__init__()
         self.batch_size = batch_size
         self.dec_units = dec_units
-        self.gru = tf.keras.layers.GRU(self.dec_units,
+        self.gru = tf.keras.layers.CuDNNLSTM(self.dec_units,
                                        return_sequences=True,
                                        return_state=True,
-                                       recurrent_initializer='glorot_uniform', name="decoder_gru")
+                                       recurrent_initializer='glorot_uniform')
         self.fc = tf.keras.layers.Dense(output_size, activation="softmax")
 
     def call(self, x, feat, hidden):
         # enc_output shape == (batch_size, max_length, hidden_size)
         x = tf.concat([x, feat], axis=-1)
         x = tf.expand_dims(x, 1)
-        output, state = self.gru(x, initial_state=hidden)
+        output, state_h, state_c = self.gru(x, initial_state=hidden)
         output = tf.reshape(output, (-1, output.shape[2]))
 
         x = self.fc(output)
-        return x, state  # , attention_weights
+        return x, [state_h, state_c]
 
 
 # In[ ]:
