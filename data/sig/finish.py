@@ -7,10 +7,13 @@ for line in lines:
 
 
 random.shuffle(data)
+r = 12800.0 / (12800.0 + 1600)
+train_size = int(len(lines) * r)
+test_size = len(lines) - train_size
 print(len(data))
 total = len(data)
-file = open("finnish-test.txt", encoding='utf-8', mode='w')
-for i in range(1600):
+file = open("finnish-test3-test.txt", encoding='utf-8', mode='w')
+for i in range(test_size):
     root, feat, word = data[i]
     ft = feat.split(',')
     ft_new = []
@@ -24,8 +27,8 @@ for i in range(1600):
     line = "{0} {1} {2}\n".format(root, ft, word)
     file.write(line)
 file.close()
-file = open("finnish-train.txt", encoding='utf-8', mode='w')
-for i in range(1600, len(data)):
+file = open("finnish-task3-train.txt", encoding='utf-8', mode='w')
+for i in range(test_size, len(data)):
     root, feat, word = data[i]
     ft = feat.split(',')
     ft_new = []

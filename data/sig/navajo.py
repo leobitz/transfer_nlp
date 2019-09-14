@@ -7,11 +7,14 @@ for line in lines:
 
 
 random.shuffle(data)
+r = 12800.0 / (12800.0 + 1600)
+train_size = int(len(lines) * r)
+test_size = len(lines) - train_size
 print(len(data))
 total = len(data)
 tests = int((total * 1600.0)/12800.0)
-file = open("navajo-test.txt", encoding='utf-8', mode='w')
-for i in range(tests):
+file = open("navajo-task3-test.txt", encoding='utf-8', mode='w')
+for i in range(test_size):
     root, feat, word = data[i]
     ft = feat.split(',')
     ft_new = []
@@ -25,8 +28,8 @@ for i in range(tests):
     line = "{0} {1} {2}\n".format(root, ft, word)
     file.write(line)
 file.close()
-file = open("navajo-train.txt", encoding='utf-8', mode='w')
-for i in range(tests, len(data)):
+file = open("navajo-task3-train.txt", encoding='utf-8', mode='w')
+for i in range(test_size, len(data)):
     root, feat, word = data[i]
     ft = feat.split(',')
     ft_new = []

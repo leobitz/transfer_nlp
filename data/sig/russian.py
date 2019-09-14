@@ -7,10 +7,13 @@ for line in lines:
 
 
 random.shuffle(data)
+r = 12800.0 / (12800.0 + 1600)
+train_size = int(len(lines) * r)
+test_size = len(lines) - train_size
 print(len(data))
 total = len(data)
 tests = int((total * 1600.0)/12800.0)
-file = open("russian-test.txt", encoding='utf-8', mode='w')
+file = open("russian-task3-test.txt", encoding='utf-8', mode='w')
 for i in range(tests):
     root, feat, word = data[i]
     ft = feat.split(',')
@@ -25,7 +28,7 @@ for i in range(tests):
     line = "{0} {1} {2}\n".format(root, ft, word)
     file.write(line)
 file.close()
-file = open("russian-train.txt", encoding='utf-8', mode='w')
+file = open("russian-task3-train.txt", encoding='utf-8', mode='w')
 for i in range(tests, len(data)):
     root, feat, word = data[i]
     ft = feat.split(',')

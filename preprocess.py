@@ -2,7 +2,8 @@
 import numpy as np
 
 
-def process(langs=None, path="/home/leo/projects/transfer_nlp/"):
+def process(langs=None, path=""):
+    """ Returns statstical info"""
     chars = {}
     feats = {"lang": []}
     max_root, max_word = 0, 0
@@ -12,9 +13,13 @@ def process(langs=None, path="/home/leo/projects/transfer_nlp/"):
 
     for lang in langs:
         feats['lang'].append(lang)
-        lines = open(path + "data/sig/{0}-train.txt".format(lang),
+        lines1 = open(path + "data/sig/{0}-train.txt".format(lang),
                      encoding='utf-8').readlines()
+        lines2 = open(path + "data/sig/{0}-test.txt".format(lang),
+                     encoding='utf-8').readlines()
+        lines = lines1 + lines2
         for line in lines:
+            # print(line)
             root, feat, word = line[:-1].split(' ')
             feat = feat.split(',')
             # print(feat)
@@ -94,8 +99,8 @@ def word_index_2_one_hot(indexes, max_len):
     return vecs
 
 
-def convert(char2int, feat2val, max_root_len, max_word_len, train_set=True, 
-langs=None, for_cnn=False, data_size=-1,  path="/home/leo/projects/transfer_nlp/"):
+def convert(char2int, feat2val, max_root_len, max_word_len, train_set=True,
+            langs=None, for_cnn=False, data_size=-1,  path="/home/leo/projects/transfer_nlp/"):
     # print(feat2val)
     max_root_len = max_root_len + 2
     max_word_len = max_word_len + 2
@@ -168,7 +173,7 @@ langs=None, for_cnn=False, data_size=-1,  path="/home/leo/projects/transfer_nlp/
     return root_data, feat_data, in_data, out_data
 
 
-def get_lines(train_set=True, langs=None, data_size=-1,  path="/home/leo/projects/transfer_nlp/"):
+def get_lines(train_set=True, langs=None, data_size=-1,  path=""):
     if langs is None:
         langs = ["arabic", "finnish", "georgian", "german",
                  "hungarian", "navajo", "russian", "spanish", "turkish"]
@@ -176,9 +181,9 @@ def get_lines(train_set=True, langs=None, data_size=-1,  path="/home/leo/project
     data = []
     for lang in langs:
         if train_set == True:
-            name =path +   "data/sig/{0}-train.txt".format(lang)
+            name = path + "data/sig/{0}-train.txt".format(lang)
         else:
-            name =path + "data/sig/{0}-test.txt".format(lang)
+            name = path + "data/sig/{0}-test.txt".format(lang)
         file = open(name, encoding='utf-8')
 
         lines = []
@@ -188,7 +193,11 @@ def get_lines(train_set=True, langs=None, data_size=-1,  path="/home/leo/project
             for i in range(data_size):
                 lines.append(file.readline())
         data.extend(lines)
-    return data
+    d = []
+    for line in data:
+        if len(line[:-1].split(' ')) == 3:
+            d.append(line)
+    return d
 
 
 def lines_2_inputs(lines, char2int, feat2val, max_root_len, max_word_len, for_cnn=False):
@@ -196,11 +205,12 @@ def lines_2_inputs(lines, char2int, feat2val, max_root_len, max_word_len, for_cn
     max_word_len = max_word_len + 2
     root_data, feat_data, in_data, out_data = [], [], [], []
     for i, line in enumerate(lines):
+        # print(lines[i+1])
         root, feat, word = line[:-1].split(' ')
         feat = feat.split(',')
         current_feats = {}
         feat_vecs = []
-        # print(feat)
+        # print(line)
         for ft in feat:
             key, val = ft.split('=')
             current_feats[key] = val
@@ -219,6 +229,8 @@ def lines_2_inputs(lines, char2int, feat2val, max_root_len, max_word_len, for_cn
                 '<' + root + '>', char2int, max_root_len, ' ')
             word_vec_in = word_to_matrix(
                 '<' + word + '>', char2int, max_word_len, ' ')
+            # if np.array(root_vec).shape != (len(root_vec), 44):
+            #     # print(np.array(root_vec).shape)
         else:
             root_vec = word_to_index(
                 '<' + root + '>', char2int, max_root_len, ' ')
@@ -233,6 +245,13 @@ def lines_2_inputs(lines, char2int, feat2val, max_root_len, max_word_len, for_cn
         in_data.append(word_vec_in)
         out_data.append(output)
 
+    # rrs = []
+    # for rr in root_data:
+    #     a = np.array(rr,  dtype=np.float32)
+    #     rrs.append(a)
+    #     if a.shape != (21, 44):
+    #         print(a.shape)
+    # rrs = np.stack(rrs)
     if for_cnn:
         root_data = np.array(root_data, dtype=np.float32)
         in_data = np.array(in_data, dtype=np.float32)
@@ -243,6 +262,8 @@ def lines_2_inputs(lines, char2int, feat2val, max_root_len, max_word_len, for_cn
     feat_data = np.array(feat_data, dtype=np.float32)
     out_data = np.array(out_data, dtype=np.float32)
     return root_data, feat_data, in_data, out_data
+
+
 
 
 def gen(data, batch_size=64, max_batch=-1, shuffle=True):
@@ -276,10 +297,9 @@ def gen_batched(lines, char2int, feat2val, max_root_len, max_word_len, batch_siz
         np.random.shuffle(lines)
     while True:
         batch_lines = lines[current: current + batch_size]
-        batch_root, batch_feat, batch_in, batch_out = lines_2_inputs(
-            batch_lines, char2int, feat2val, max_root_len, max_word_len, for_cnn=cnn)
+        batch_root, batch_feat, batch_in, batch_out = lines_2_inputs(batch_lines, char2int, feat2val, max_root_len, max_word_len, for_cnn=cnn)
         current += batch_size
-
+        
         if current >= max_train:
             if shuffle:
                 np.random.shuffle(lines)
@@ -290,6 +310,7 @@ def gen_batched(lines, char2int, feat2val, max_root_len, max_word_len, batch_siz
 
 # char2int, feat2val, max_r, max_w = process(['wol'])
 # lines = get_lines(train_set=False,langs=['wol-clean'])
+# print(word_to_index(lines[0].split()[0], char2int, max_w, ' '))
 # gen = gen_batched(lines, char2int, feat2val, max_r, max_w, batch_size=64, cnn=True)
 # x = next(gen)
 # print(x[0][0].shape)

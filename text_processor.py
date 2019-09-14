@@ -3,7 +3,8 @@ import json
 
 # converts raw features to one-hot encoding
 
-feat2val = json.loads(open('/home/leo/projects/transfer_nlp/features.json').read())
+feat2val = json.loads(open('features.json').read())
+# feat2val = json.loads(open('/home/leo/projects/transfer_nlp/features.json').read())
 val2feat = {}
 feat2int = {}
 int2feat = {}
